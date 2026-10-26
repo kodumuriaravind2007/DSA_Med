@@ -18,7 +18,6 @@ htmlcov/
 # Node & Frontend
 node_modules/
 frontend/node_modules/
-frontend/dist/
 frontend/dist-ssr/
 npm-debug.log*
 yarn-debug.log*
