@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   Bed as BedIcon, Stethoscope, Users, CheckCircle2, AlertCircle,
-  Filter, GitBranch, ArrowRight, Activity, RefreshCw, X
+  Filter, ArrowRight, Activity, RefreshCw, X
 } from 'lucide-react';
 import { api } from '../services/api';
 import { Bed, Doctor, Patient } from '../types';
@@ -14,18 +14,16 @@ interface ResourceManagementViewProps {
 export const ResourceManagementView: React.FC<ResourceManagementViewProps> = ({
   onSelectPatient,
 }) => {
-  const [activeTab, setActiveTab] = useState<'beds' | 'doctors' | 'graph'>('beds');
+  const [activeTab, setActiveTab] = useState<'beds' | 'doctors'>('beds');
   const [beds, setBeds] = useState<Bed[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [patients, setPatients] = useState<Patient[]>([]);
-  const [graphData, setGraphData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   // Filters
   const [wardFilter, setWardFilter] = useState('All');
   const [bedStatusFilter, setBedStatusFilter] = useState('All');
   const [doctorDeptFilter, setDoctorDeptFilter] = useState('All');
-  const [vertexFilter, setVertexFilter] = useState<'All' | 'DEPT' | 'DOC' | 'BED' | 'PT'>('All');
 
   // Allocate Bed Modal
   const [selectedBed, setSelectedBed] = useState<Bed | null>(null);
@@ -37,24 +35,17 @@ export const ResourceManagementView: React.FC<ResourceManagementViewProps> = ({
   const [assigningPatientId, setAssigningPatientId] = useState('');
   const [isAssigningDoctor, setIsAssigningDoctor] = useState(false);
 
-  // Graph Traversal State
-  const [traversalResult, setTraversalResult] = useState<any>(null);
-  const [traversalNode, setTraversalNode] = useState('DEPT-EME');
-  const [isTraversing, setIsTraversing] = useState(false);
-
   const loadResources = async () => {
     try {
       setIsLoading(true);
-      const [bedsRes, docsRes, ptsRes, graphRes] = await Promise.all([
+      const [bedsRes, docsRes, ptsRes] = await Promise.all([
         api.getBeds(),
         api.getDoctors(),
         api.getPatients(),
-        api.getResourceGraph(),
       ]);
       setBeds(bedsRes);
       setDoctors(docsRes);
       setPatients(ptsRes);
-      setGraphData(graphRes);
     } catch (err: any) {
       console.error(err);
     } finally {
@@ -127,30 +118,6 @@ export const ResourceManagementView: React.FC<ResourceManagementViewProps> = ({
     }
   };
 
-  const handleRunBFS = async () => {
-    try {
-      setIsTraversing(true);
-      const res = await api.runGraphBFS(traversalNode);
-      setTraversalResult(res);
-    } catch (err: any) {
-      alert(err.message || 'BFS failed');
-    } finally {
-      setIsTraversing(false);
-    }
-  };
-
-  const handleRunDFS = async () => {
-    try {
-      setIsTraversing(true);
-      const res = await api.runGraphDFS(traversalNode);
-      setTraversalResult(res);
-    } catch (err: any) {
-      alert(err.message || 'DFS failed');
-    } finally {
-      setIsTraversing(false);
-    }
-  };
-
   // Group beds by ward
   const wards = Array.from(new Set(beds.map((b) => b.ward)));
   const filteredBeds = beds.filter((b) => {
@@ -191,18 +158,6 @@ export const ResourceManagementView: React.FC<ResourceManagementViewProps> = ({
           >
             <Stethoscope className="w-3.5 h-3.5" />
             <span>Physician Directory ({doctors.length})</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('graph')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
-              activeTab === 'graph'
-                ? 'bg-[#7F011F] text-[#F5EBD0] shadow-xs'
-                : 'text-[#6E5A5E] hover:bg-[#FAF6EC] hover:text-[#2A161B]'
-            }`}
-          >
-            <GitBranch className="w-3.5 h-3.5" />
-            <span>Hospital Resource Graph</span>
           </button>
         </div>
 
@@ -442,130 +397,6 @@ export const ResourceManagementView: React.FC<ResourceManagementViewProps> = ({
                 </div>
               );
             })}
-          </div>
-        </div>
-      )}
-
-      {/* --- TAB 3: HOSPITAL RESOURCE GRAPH --- */}
-      {activeTab === 'graph' && (
-        <div className="space-y-6">
-          <div className="bg-white p-6 rounded-2xl border border-[#E8DBC0] shadow-sm space-y-4">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-[#E8DBC0]">
-              <div>
-                <h3 className="text-sm font-bold text-[#7F011F]">Live Hospital Resource Graph (Adjacency List)</h3>
-                <p className="text-xs text-[#6E5A5E]">
-                  Mathematical graph model representing patients, departments, physicians, beds, and diagnostic services as connected vertices.
-                </p>
-              </div>
-
-              {/* Traversal Controls */}
-              <div className="flex items-center gap-2">
-                <select
-                  value={traversalNode}
-                  onChange={(e) => setTraversalNode(e.target.value)}
-                  className="px-3 py-1.5 rounded-xl border border-[#E8DBC0] bg-[#FAF6EC] text-xs font-semibold text-[#2A161B] focus:outline-none focus:border-[#7F011F]"
-                >
-                  <option value="DEPT-EME">Emergency Dept</option>
-                  <option value="DEPT-CAR">Cardiology Dept</option>
-                  <option value="DEPT-ORT">Orthopedics Dept</option>
-                  <option value="DEPT-ICU">ICU Dept</option>
-                  <option value="PT-101">Patient PT-101</option>
-                </select>
-
-                <button
-                  onClick={handleRunBFS}
-                  disabled={isTraversing}
-                  className="px-4 py-1.5 rounded-xl bg-[#7F011F] hover:bg-[#660119] text-[#F5EBD0] text-xs font-bold shadow-xs"
-                >
-                  Run BFS
-                </button>
-
-                <button
-                  onClick={handleRunDFS}
-                  disabled={isTraversing}
-                  className="px-4 py-1.5 rounded-xl bg-[#FAF6EC] hover:bg-[#F5EBD0] text-[#7F011F] border border-[#E8DBC0] text-xs font-bold shadow-xs"
-                >
-                  Run DFS
-                </button>
-              </div>
-            </div>
-
-            {/* Traversal Output Console */}
-            {traversalResult && (
-              <div className="p-4 bg-[#2A161B] text-[#F5EBD0] rounded-2xl space-y-2 text-xs font-mono">
-                <div className="text-[#F5EBD0] font-bold flex items-center justify-between">
-                  <span>Traversal Algorithm: {traversalResult.algorithm}</span>
-                  <span className="text-white/60 font-normal">{traversalResult.complexity}</span>
-                </div>
-                <div className="text-white/80">
-                  Start Vertex: <strong className="text-white">{traversalResult.start_node}</strong> • Total Visited: {traversalResult.total_visited} vertices
-                </div>
-                <div className="p-2.5 bg-black/40 rounded-xl border border-white/10 break-words text-[11px] text-emerald-300">
-                  Visited Order: {traversalResult.visited_order.join('  ➜  ')}
-                </div>
-              </div>
-            )}
-
-            {/* Visual Node Cloud & Adjacency Breakdown */}
-            {graphData && (
-              <div className="space-y-4 pt-2">
-                <div className="flex flex-wrap items-center justify-between gap-3 text-xs">
-                  <div className="flex flex-wrap items-center gap-3 font-medium text-[#6E5A5E]">
-                    <span className="flex items-center gap-1.5">
-                      <span className="w-3 h-3 rounded-full bg-[#7F011F]"></span> Departments
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                      <span className="w-3 h-3 rounded-full bg-emerald-600"></span> Doctors
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                      <span className="w-3 h-3 rounded-full bg-amber-600"></span> Beds
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                      <span className="w-3 h-3 rounded-full bg-purple-600"></span> Patients
-                    </span>
-                  </div>
-
-                  {/* Filter Pills */}
-                  <div className="flex items-center gap-1.5 bg-[#FAF6EC] p-1 rounded-xl border border-[#E8DBC0]">
-                    {(['All', 'DEPT', 'DOC', 'BED', 'PT'] as const).map((vt) => (
-                      <button
-                        key={vt}
-                        onClick={() => setVertexFilter(vt)}
-                        className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all ${
-                          vertexFilter === vt
-                            ? 'bg-[#7F011F] text-[#F5EBD0] shadow-xs'
-                            : 'text-[#6E5A5E] hover:text-[#2A161B]'
-                        }`}
-                      >
-                        {vt === 'All' ? 'All Vertices' : vt === 'DEPT' ? 'Depts' : vt === 'DOC' ? 'Doctors' : vt === 'BED' ? 'Beds' : 'Patients'}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
-                  {Object.entries(graphData.adjacency_list || {})
-                    .filter(([nodeId]) => vertexFilter === 'All' || nodeId.startsWith(vertexFilter))
-                    .map(([nodeId, neighbors]: [string, any]) => (
-                    <div key={nodeId} className="p-3.5 bg-[#FAF6EC]/60 rounded-xl border border-[#E8DBC0] text-xs">
-                      <div className="font-mono font-bold text-[#2A161B] flex items-center justify-between">
-                        <span>Vertex: {nodeId}</span>
-                        <span className="text-[10px] text-[#6E5A5E] font-normal">{neighbors.length} Edges</span>
-                      </div>
-                      <div className="mt-1 space-y-0.5 text-[11px] text-[#6E5A5E] font-mono">
-                        {neighbors.length > 0 ? (
-                          neighbors.map((edgeStr: string, idx: number) => (
-                            <div key={idx} className="truncate">↳ {edgeStr}</div>
-                          ))
-                        ) : (
-                          <div className="text-[#8C7B7E] italic">No connected edges</div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         </div>
       )}

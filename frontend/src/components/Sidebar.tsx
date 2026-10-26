@@ -116,9 +116,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
       items: [
         {
           id: 'resources',
-          label: 'Beds & Doctor Graph',
+          label: 'Beds & Ward Management',
           icon: Bed,
-          badge: 'Graph',
+          badge: 'Beds',
           roles: ['doctor', 'nurse', 'receptionist', 'admin'],
         },
         {
@@ -133,7 +133,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           label: 'Surge Capacity Sim',
           icon: AlertTriangle,
           badge: 'Forecast',
-          roles: ['doctor', 'admin'],
+          roles: ['admin'],
         },
       ],
     },
@@ -171,9 +171,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
         </div>
 
-        {/* Navigation Sections in 4 Collapsible Groups */}
+        {/* Navigation Sections */}
         <nav className="p-3 space-y-3">
-          {navGroups.map((group) => {
+          {navGroups
+            .filter((group) => (role === 'patient' ? group.id === 'dashboards' : true))
+            .map((group) => {
             const isCollapsed = !!collapsedGroups[group.id];
             const visibleItems = group.items.filter((item) =>
               item.roles.includes(role || 'doctor')

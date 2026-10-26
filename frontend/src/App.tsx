@@ -97,6 +97,13 @@ function MainApp() {
     }
   }, [role]);
 
+  // Guard: Restrict patient role strictly to patient portal
+  useEffect(() => {
+    if (role === 'patient' && activeScreen !== 'patient-dashboard') {
+      setActiveScreen('patient-dashboard');
+    }
+  }, [role, activeScreen]);
+
   // If auth is still resolving from localStorage
   if (isAuthLoading) {
     return (
@@ -120,7 +127,9 @@ function MainApp() {
 
   const handleSelectPatient = (patientId: string) => {
     setSelectedPatientId(patientId);
-    setActiveScreen('patient-360');
+    if (role !== 'patient') {
+      setActiveScreen('patient-360');
+    }
   };
 
   const handlePatientRegistered = async (newPatient: any) => {

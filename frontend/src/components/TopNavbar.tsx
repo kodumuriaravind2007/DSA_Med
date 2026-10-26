@@ -126,9 +126,9 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
       icon: Bed,
       defaultScreen: 'resources',
       subParts: [
-        { id: 'resources', label: 'Beds & Doctor Graph', badge: 'Graph', icon: Bed, roles: ['doctor', 'nurse', 'receptionist', 'admin'] },
+        { id: 'resources', label: 'Beds & Ward Management', badge: 'Beds', icon: Bed, roles: ['doctor', 'nurse', 'receptionist', 'admin'] },
         { id: 'nutrition-inventory', label: 'Nutrition & Supplies', badge: 'Supplies', icon: Apple, roles: ['nurse', 'doctor', 'admin'] },
-        { id: 'surge-simulation', label: 'Surge Capacity Sim', badge: 'Forecast', icon: AlertTriangle, roles: ['doctor', 'admin'] },
+        { id: 'surge-simulation', label: 'Surge Capacity Sim', badge: 'Forecast', icon: AlertTriangle, roles: ['admin'] },
       ],
     },
     {
@@ -176,9 +176,11 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
           </div>
         </div>
 
-        {/* MIDDLE TOP: EXACTLY 4 PRIMARY CATEGORIES (Centered, Perfectly Symmetrical Capsule Bar) */}
+        {/* MIDDLE TOP: PRIMARY CATEGORIES (Centered, Perfectly Symmetrical Capsule Bar) */}
         <nav ref={navRef} className="flex items-center gap-1 bg-[#FAF6EC] p-1 rounded-full border border-[#E8DBC0] shadow-2xs relative">
-          {categories.map((cat) => {
+          {categories
+            .filter((cat) => (role === 'patient' ? cat.id === 'dashboards' : true))
+            .map((cat) => {
             const Icon = cat.icon;
             const isCatActive = activeCategory === cat.id;
             const isDropdownOpen = openDropdown === cat.id;

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import {
   User, Activity, Calendar, Clock, FileText, Download, ShieldAlert,
   AlertTriangle, Stethoscope, Pill, Beaker, CheckCircle2, ChevronRight,
-  Heart, Thermometer, Wind, Droplets, Plus, Copy, Check,
+  Heart, Thermometer, Wind, Droplets, Plus, Check,
   ShieldCheck, FileCheck, Hash, Link2, AlertOctagon, ClipboardList
 } from 'lucide-react';
 import { api } from '../services/api';
@@ -28,10 +28,6 @@ export const Patient360View: React.FC<Patient360ViewProps> = ({
   const [activeTab, setActiveTab] = useState<string>('overview');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  // FHIR Export state
-  const [fhirJson, setFhirJson] = useState<any>(null);
-  const [isCopied, setIsCopied] = useState(false);
 
   // New Lab Order Modal
   const [showOrderModal, setShowOrderModal] = useState(false);
@@ -66,10 +62,6 @@ export const Patient360View: React.FC<Patient360ViewProps> = ({
       setError(null);
       const res = await api.getPatient360(id);
       setData(res);
-
-      // Load FHIR bundle preview
-      const fhir = await api.getPatientFHIR(id);
-      setFhirJson(fhir);
     } catch (err: any) {
       setError(err.message || 'Error loading Patient 360');
     } finally {
@@ -120,13 +112,6 @@ export const Patient360View: React.FC<Patient360ViewProps> = ({
     } finally {
       setIsSavingResult(false);
     }
-  };
-
-  const handleCopyFHIR = () => {
-    if (!fhirJson) return;
-    navigator.clipboard.writeText(JSON.stringify(fhirJson, null, 2));
-    setIsCopied(true);
-    setTimeout(() => setIsCopied(false), 3000);
   };
 
   const handleSubmitCorrection = async (e: React.FormEvent) => {
@@ -291,10 +276,8 @@ export const Patient360View: React.FC<Patient360ViewProps> = ({
           { id: 'timeline', label: '2. Medical Timeline' },
           { id: 'labs', label: `3. Lab Reports (${lab_orders.length})` },
           { id: 'meds', label: `4. Medications & Allergies (${allergies.length})` },
-          { id: 'visits', label: `5. Visit History (${visits.length})` },
-          { id: 'activity', label: '6. Record Activity' },
-          { id: 'export', label: '7. Structured Export (FHIR)' },
-          { id: 'corrections', label: `8. Audit Corrections (${corrections.length})` },
+          { id: 'activity', label: '5. Record Activity' },
+          { id: 'corrections', label: `6. Audit Corrections (${corrections.length})` },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -663,36 +646,7 @@ export const Patient360View: React.FC<Patient360ViewProps> = ({
         </div>
       )}
 
-      {/* TAB 5: VISIT HISTORY */}
-      {activeTab === 'visits' && (
-        <div className="bg-white p-6 rounded-2xl border border-[#E8DBC0] shadow-sm space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-[#E8DBC0]">
-            <div>
-              <h3 className="text-sm font-bold text-[#7F011F]">Previous Clinical Visits & Encounters</h3>
-              <p className="text-xs text-[#6E5A5E]">Longitudinal medical encounter history</p>
-            </div>
-          </div>
-          {visits.length > 0 ? (
-            <div className="space-y-3">
-              {visits.map((v) => (
-                <div key={v.id} className="p-4 bg-[#FAF6EC]/60 rounded-xl border border-[#E8DBC0] text-xs space-y-1.5">
-                  <div className="flex items-center justify-between font-bold text-[#2A161B]">
-                    <span>Encounter #{v.id} • {v.department}</span>
-                    <span className="text-[11px] text-[#8C7B7E] font-mono">{v.visit_date.slice(0, 10)}</span>
-                  </div>
-                  <div className="text-[#6E5A5E]">Diagnosis: <strong className="text-[#7F011F]">{v.diagnosis || 'Undifferentiated'}</strong></div>
-                  <p className="text-[#2A161B]">{v.notes}</p>
-                  <div className="text-[11px] text-[#8C7B7E]">Attending: {v.doctor_name} • Outcome: {v.outcome}</div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-xs text-[#8C7B7E] p-6 text-center">First recorded hospital admission. No prior historical encounters found.</div>
-          )}
-        </div>
-      )}
-
-      {/* TAB 6: RECORD ACTIVITY */}
+      {/* TAB 5: RECORD ACTIVITY */}
       {activeTab === 'activity' && (
         <div className="bg-white p-6 rounded-2xl border border-[#E8DBC0] shadow-sm space-y-3">
           <h3 className="text-sm font-bold text-[#7F011F]">Record Audit & Access History</h3>
@@ -722,47 +676,7 @@ export const Patient360View: React.FC<Patient360ViewProps> = ({
         </div>
       )}
 
-      {/* TAB 7: STRUCTURED EXPORT (FHIR) */}
-      {activeTab === 'export' && (
-        <div className="bg-white p-6 rounded-2xl border border-[#E8DBC0] shadow-sm space-y-4">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-[#E8DBC0]">
-            <div>
-              <h3 className="text-sm font-bold text-[#7F011F]">HL7 FHIR R4-Inspired Structured JSON Bundle</h3>
-              <p className="text-xs text-[#6E5A5E]">
-                Interoperable healthcare resource bundle containing Patient, Encounter, and Observation resources.
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={handleCopyFHIR}
-                className="px-4 py-2 rounded-xl border border-[#E8DBC0] text-[#7F011F] hover:bg-[#FAF6EC] text-xs font-bold flex items-center gap-1.5 transition"
-              >
-                {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-[#7F011F]" />}
-                <span>{isCopied ? 'Copied JSON!' : 'Copy to Clipboard'}</span>
-              </button>
-              <a
-                href={`/api/export/patient/${patient.patient_id}/fhir/download`}
-                download
-                className="px-4 py-2 rounded-xl bg-[#7F011F] hover:bg-[#660119] text-[#F5EBD0] text-xs font-bold flex items-center gap-1.5 transition shadow-xs"
-              >
-                <Download className="w-3.5 h-3.5" />
-                <span>Download FHIR JSON</span>
-              </a>
-            </div>
-          </div>
-
-          <div className="p-3.5 bg-[#FAF6EC] border border-[#E8DBC0] rounded-xl text-xs text-[#7F011F]">
-            <strong>Compliance Disclaimer:</strong> This export utilizes a structured JSON format modeled on HL7 FHIR concepts for academic interoperability. MedTree X does not claim to operate a certified FHIR server.
-          </div>
-
-          {/* JSON Syntax Viewer */}
-          <div className="bg-[#2A161B] text-[#F5EBD0] p-4 rounded-xl font-mono text-xs overflow-x-auto max-h-[500px]">
-            <pre>{JSON.stringify(fhirJson, null, 2)}</pre>
-          </div>
-        </div>
-      )}
-
-      {/* TAB 8: MEDICAL RECORD CORRECTIONS & CRYPTOGRAPHIC LINEAGE */}
+      {/* TAB 6: MEDICAL RECORD CORRECTIONS & CRYPTOGRAPHIC LINEAGE */}
       {activeTab === 'corrections' && (
         <div className="space-y-6">
           <div className="bg-white p-6 rounded-2xl border border-[#E8DBC0] shadow-sm space-y-4">
