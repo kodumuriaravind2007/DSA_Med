@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   Stethoscope, HeartPulse, Users, Building2,
   Activity, Bed, Apple, AlertTriangle, GitBranch,
-  ShieldCheck, LayoutDashboard, Bell, LogOut,
+  ShieldCheck, ShieldAlert, LayoutDashboard, Bell, LogOut,
   ChevronDown, TrendingUp
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -129,16 +129,15 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
         { id: 'resources', label: 'Beds & Doctor Graph', badge: 'Graph', icon: Bed, roles: ['doctor', 'nurse', 'receptionist', 'admin'] },
         { id: 'nutrition-inventory', label: 'Nutrition & Supplies', badge: 'Supplies', icon: Apple, roles: ['nurse', 'doctor', 'admin'] },
         { id: 'surge-simulation', label: 'Surge Capacity Sim', badge: 'Forecast', icon: AlertTriangle, roles: ['doctor', 'admin'] },
-        { id: 'hospital-analytics', label: 'Hospital Analytics', badge: 'Wait Times', icon: TrendingUp, roles: ['doctor', 'admin'] },
       ],
     },
     {
       id: 'dsa',
       label: 'DSA & Security',
-      icon: ShieldCheck,
+      icon: ShieldAlert,
       defaultScreen: 'security-analytics',
       subParts: [
-        { id: 'security-analytics', label: 'Cryptographic Audit', badge: 'SHA-256', icon: ShieldCheck, roles: ['doctor', 'admin', 'receptionist'] },
+        { id: 'security-analytics', label: 'Duplicate Detection', badge: 'Levenshtein', icon: ShieldAlert, roles: ['doctor', 'admin', 'receptionist', 'nurse'] },
       ],
     },
   ];

@@ -135,13 +135,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
           badge: 'Forecast',
           roles: ['doctor', 'admin'],
         },
-        {
-          id: 'hospital-analytics',
-          label: 'Hospital Analytics',
-          icon: TrendingUp,
-          badge: 'Analytics',
-          roles: ['doctor', 'admin'],
-        },
       ],
     },
     {
@@ -150,10 +143,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
       items: [
         {
           id: 'security-analytics',
-          label: 'Cryptographic Audit',
-          icon: ShieldCheck,
-          badge: 'SHA-256',
-          roles: ['doctor', 'admin', 'receptionist'],
+          label: 'Duplicate Detection',
+          icon: ShieldAlert,
+          badge: 'Levenshtein',
+          roles: ['doctor', 'admin', 'receptionist', 'nurse'],
         },
       ],
     },

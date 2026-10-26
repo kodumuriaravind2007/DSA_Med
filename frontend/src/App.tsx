@@ -221,12 +221,8 @@ function MainApp() {
           />
         )}
 
-        {activeScreen === 'hospital-analytics' && (
-          <SecurityAnalyticsView initialTab="analytics" />
-        )}
-
         {activeScreen === 'security-analytics' && (
-          <SecurityAnalyticsView initialTab="audit" />
+          <SecurityAnalyticsView />
         )}
       </main>
 
