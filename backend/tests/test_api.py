@@ -120,20 +120,7 @@ def test_fhir_export():
     assert first_res["resourceType"] == "Patient"
 
 
-def test_dsa_board_endpoints():
-    # Live BST
-    bst_res = client.get("/api/dsa/bst/live")
-    assert bst_res.status_code == 200
-
-    # Demo Heap
-    heap_res = client.get("/api/dsa/heap/demo")
-    assert heap_res.status_code == 200
-
-    # Hash table
-    hash_res = client.get("/api/dsa/hash-table/demo")
-    assert hash_res.status_code == 200
-
-    # Complexity matrix
-    cplx_res = client.get("/api/dsa/complexity-matrix")
-    assert cplx_res.status_code == 200
-    assert len(cplx_res.json()) >= 6
+def test_dsa_board_endpoints_removed():
+    """Verify that DSA Algorithms Board exclusive endpoints have been completely removed."""
+    res = client.get("/api/dsa/bst/live")
+    assert res.status_code == 404

@@ -11,6 +11,7 @@ import {
   PatientHistoryChangeAlert, CriticalFollowUp, ClinicalHandover
 } from '../types';
 import { PriorityBadge, WorkflowBadge } from '../components/StatusBadge';
+import { useAuth } from '../context/AuthContext';
 
 interface Patient360ViewProps {
   patientId: string;
@@ -38,6 +39,8 @@ export const Patient360View: React.FC<Patient360ViewProps> = ({
   const [orderingDoctor, setOrderingDoctor] = useState('Attending Physician');
   const [isOrdering, setIsOrdering] = useState(false);
 
+  const { user, role, doctorId } = useAuth();
+
   // New Result Modal
   const [showResultModal, setShowResultModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<LabOrder | null>(null);
@@ -47,6 +50,15 @@ export const Patient360View: React.FC<Patient360ViewProps> = ({
   const [paramRange, setParamRange] = useState('');
   const [paramFlag, setParamFlag] = useState('Normal');
   const [isSavingResult, setIsSavingResult] = useState(false);
+
+  // Feature E: Clinical Correction Modal state
+  const [showCorrectionModal, setShowCorrectionModal] = useState(false);
+  const [corrRecordType, setCorrRecordType] = useState('Diagnosis');
+  const [corrFieldName, setCorrFieldName] = useState('diagnosis');
+  const [corrPrevValue, setCorrPrevValue] = useState('');
+  const [corrNewValue, setCorrNewValue] = useState('');
+  const [corrReason, setCorrReason] = useState('');
+  const [isSubmittingCorr, setIsSubmittingCorr] = useState(false);
 
   const loadProfile = async (id: string) => {
     try {
@@ -115,6 +127,49 @@ export const Patient360View: React.FC<Patient360ViewProps> = ({
     navigator.clipboard.writeText(JSON.stringify(fhirJson, null, 2));
     setIsCopied(true);
     setTimeout(() => setIsCopied(false), 3000);
+  };
+
+  const handleSubmitCorrection = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!data || !corrFieldName.trim() || !corrNewValue.trim() || corrReason.trim().length < 5) return;
+    try {
+      setIsSubmittingCorr(true);
+      const author = user?.full_name || 'Dr. Attending Physician';
+      const authorRole = role || 'doctor';
+      await api.submitCorrection({
+        patient_id: data.patient.patient_id,
+        record_type: corrRecordType,
+        field_name: corrFieldName.trim(),
+        previous_value: corrPrevValue.trim(),
+        new_value: corrNewValue.trim(),
+        reason: corrReason.trim(),
+        author_name: author,
+        author_role: authorRole,
+      });
+      setShowCorrectionModal(false);
+      setCorrPrevValue('');
+      setCorrNewValue('');
+      setCorrReason('');
+      await loadProfile(data.patient.patient_id);
+      alert('Field-level medical correction cryptographically submitted and committed to audit trail.');
+    } catch (err: any) {
+      alert(err.message || 'Failed to submit correction');
+    } finally {
+      setIsSubmittingCorr(false);
+    }
+  };
+
+  const handleApproveCorrection = async (correctionId: string, decision: 'Approved' | 'Rejected') => {
+    if (!data) return;
+    const docName = user?.full_name || 'Dr. Attending Physician';
+    const docId = doctorId || String(user?.id || 'DOC-101');
+    try {
+      await api.approveCorrection(correctionId, docName, docId, decision);
+      await loadProfile(data.patient.patient_id);
+      alert(`Correction has been formally ${decision.toLowerCase()} and signed.`);
+    } catch (err: any) {
+      alert(err.message || 'Failed to process approval');
+    }
   };
 
   if (isLoading && !data) {
@@ -438,6 +493,43 @@ export const Patient360View: React.FC<Patient360ViewProps> = ({
             </button>
           </div>
 
+          {/* Feature A: Critical Result Follow-ups */}
+          {critical_followups.length > 0 && (
+            <div className="bg-white p-5 rounded-2xl border border-red-300 shadow-sm space-y-3">
+              <div className="flex items-center gap-2 border-b border-red-200 pb-2">
+                <AlertOctagon className="w-4 h-4 text-red-600 animate-pulse" />
+                <h4 className="text-xs font-black text-red-800">
+                  Critical Diagnostic Panic Values ({critical_followups.length})
+                </h4>
+              </div>
+              <div className="space-y-2">
+                {critical_followups.map((cf: any) => (
+                  <div key={cf.id} className="p-3 rounded-xl bg-red-50/70 border border-red-200 text-xs space-y-1">
+                    <div className="flex justify-between items-center">
+                      <span className="font-bold text-[#2A161B]">
+                        {cf.parameter_name}: <strong className="text-red-700">{cf.result_value} {cf.unit}</strong>
+                      </span>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-white border border-[#E8DBC0]">
+                        {cf.status}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-[#2A161B]">{cf.critical_rationale}</p>
+                    {cf.action_taken && (
+                      <p className="text-[10px] text-[#6E5A5E] bg-white p-2 rounded-lg border border-[#E8DBC0]">
+                        <strong>Clinical Action:</strong> {cf.action_taken}
+                      </p>
+                    )}
+                    {cf.resolution_details && (
+                      <p className="text-[10px] text-emerald-800 font-bold">
+                        Resolved by {cf.resolved_by}: {cf.resolution_details}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {lab_orders.length > 0 ? (
             <div className="space-y-4">
               {lab_orders.map((order) => (
@@ -685,6 +777,13 @@ export const Patient360View: React.FC<Patient360ViewProps> = ({
                   Modifications maintain complete lineage with mandatory reason, doctor approval, and SHA-256 hash chaining.
                 </p>
               </div>
+              <button
+                onClick={() => setShowCorrectionModal(true)}
+                className="px-4 py-2 rounded-xl text-xs font-bold bg-[#7F011F] hover:bg-[#660119] text-[#F5EBD0] shadow-xs transition flex items-center gap-1.5"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Submit Clinical Correction</span>
+              </button>
             </div>
 
             {corrections.length > 0 ? (
@@ -738,6 +837,28 @@ export const Patient360View: React.FC<Patient360ViewProps> = ({
                       <span className="text-[10px] uppercase font-bold text-[#7F011F] block">Mandatory Clinical Rationale</span>
                       <p className="text-[#2A161B] font-medium italic">{corr.reason}</p>
                     </div>
+
+                    {corr.approval_status === 'Pending Approval' && (
+                      <div className="flex flex-wrap items-center justify-between gap-2 bg-amber-50 p-2.5 rounded-xl border border-amber-300">
+                        <span className="text-[11px] font-bold text-amber-900">
+                          Attending Physician Review Required:
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleApproveCorrection(corr.id, 'Approved')}
+                            className="px-3 py-1 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-full text-[10px] transition shadow-2xs"
+                          >
+                            Approve & Apply
+                          </button>
+                          <button
+                            onClick={() => handleApproveCorrection(corr.id, 'Rejected')}
+                            className="px-3 py-1 bg-red-700 hover:bg-red-800 text-white font-bold rounded-full text-[10px] transition shadow-2xs"
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      </div>
+                    )}
 
                     {corr.audit_hash && (
                       <div className="flex items-center gap-2 text-[11px] font-mono bg-[#2A161B] text-[#F5EBD0] p-2 rounded-xl overflow-x-auto">
@@ -907,6 +1028,110 @@ export const Patient360View: React.FC<Patient360ViewProps> = ({
                   className="px-5 py-2 rounded-xl bg-[#7F011F] hover:bg-[#660119] text-[#F5EBD0] font-bold shadow-xs"
                 >
                   {isSavingResult ? 'Saving...' : 'Record Result'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Feature E: Submit Field-Level Medical Correction Modal */}
+      {showCorrectionModal && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-3xl border border-[#E8DBC0] max-w-lg w-full p-6 shadow-xl space-y-4 text-xs">
+            <div className="flex items-center justify-between border-b border-[#E8DBC0] pb-3">
+              <div className="flex items-center gap-2">
+                <FileCheck className="w-5 h-5 text-[#7F011F]" />
+                <h3 className="text-sm font-black text-[#7F011F]">
+                  Submit Field-Level Clinical Correction
+                </h3>
+              </div>
+              <button
+                onClick={() => setShowCorrectionModal(false)}
+                className="p-1 rounded-full hover:bg-[#FAF6EC] text-[#8C7B7E]"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmitCorrection} className="space-y-3">
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-[#6E5A5E] font-bold mb-1">Record Scope / Category:</label>
+                  <select
+                    value={corrRecordType}
+                    onChange={(e) => setCorrRecordType(e.target.value)}
+                    className="w-full p-2.5 rounded-xl border border-[#E8DBC0] bg-[#FAF6EC] text-[#2A161B] focus:outline-none"
+                  >
+                    <option value="Diagnosis">Diagnosis</option>
+                    <option value="VitalSign">Vital Sign</option>
+                    <option value="Allergy">Allergy</option>
+                    <option value="Demographics">Demographics</option>
+                    <option value="ContactInfo">Contact Info</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[#6E5A5E] font-bold mb-1">Field Name:</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. diagnosis, blood_group, phone"
+                    value={corrFieldName}
+                    onChange={(e) => setCorrFieldName(e.target.value)}
+                    required
+                    className="w-full p-2.5 rounded-xl border border-[#E8DBC0] bg-[#FAF6EC] text-[#2A161B] focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[#6E5A5E] font-bold mb-1">Previous Stored Value:</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Atypical Angina Pectoris"
+                  value={corrPrevValue}
+                  onChange={(e) => setCorrPrevValue(e.target.value)}
+                  className="w-full p-2.5 rounded-xl border border-[#E8DBC0] bg-[#FAF6EC] text-[#2A161B] focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[#6E5A5E] font-bold mb-1">Corrected New Value:</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Acute Coronary Syndrome / NSTEMI"
+                  value={corrNewValue}
+                  onChange={(e) => setCorrNewValue(e.target.value)}
+                  required
+                  className="w-full p-2.5 rounded-xl border border-[#E8DBC0] bg-[#FAF6EC] text-[#2A161B] focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[#6E5A5E] font-bold mb-1">Mandatory Clinical Rationale (Min 5 chars):</label>
+                <textarea
+                  rows={3}
+                  placeholder="Document clinical justification, repeat lab verification, or patient-confirmed correction..."
+                  value={corrReason}
+                  onChange={(e) => setCorrReason(e.target.value)}
+                  required
+                  className="w-full p-2.5 rounded-xl border border-[#E8DBC0] bg-[#FAF6EC] text-[#2A161B] focus:outline-none"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#E8DBC0]">
+                <button
+                  type="button"
+                  onClick={() => setShowCorrectionModal(false)}
+                  className="px-4 py-2 rounded-xl border border-[#E8DBC0] text-[#6E5A5E] hover:bg-[#FAF6EC]"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmittingCorr || !corrFieldName || !corrNewValue || corrReason.trim().length < 5}
+                  className="px-5 py-2 rounded-xl bg-[#7F011F] hover:bg-[#660119] text-[#F5EBD0] font-bold shadow-xs disabled:opacity-50"
+                >
+                  {isSubmittingCorr ? 'Signing & Hashing...' : 'Submit Cryptographic Correction'}
                 </button>
               </div>
             </form>

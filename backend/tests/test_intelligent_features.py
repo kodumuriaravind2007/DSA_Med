@@ -45,7 +45,15 @@ def test_critical_results_workflow():
     assert act_resp.status_code == 200
     assert act_resp.json()["record"]["status"] == "Follow-up In Progress"
 
-    # 5. Resolve
+    # 5. Escalate
+    esc_resp = client.post(f"/api/critical-results/{fu_id}/escalate", json={
+        "escalated_by": "Dr. Ayesha Mukherjee",
+        "escalation_reason": "Patient developed acute ST elevation; transferring to cath lab STAT."
+    })
+    assert esc_resp.status_code == 200
+    assert esc_resp.json()["record"]["status"] == "Escalated"
+
+    # 6. Resolve
     resolve_resp = client.post(f"/api/critical-results/{fu_id}/resolve", json={
         "resolution_details": "Coronary angiogram completed with stent placement. Patient stable.",
         "resolved_by": "Dr. Vikram Sethi"

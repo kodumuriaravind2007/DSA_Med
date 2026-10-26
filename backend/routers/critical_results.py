@@ -16,7 +16,8 @@ from ..models import (
 )
 from ..schemas import (
     CriticalFollowUpResponse, CriticalFollowUpAcknowledge,
-    CriticalFollowUpAction, CriticalFollowUpResolve
+    CriticalFollowUpAction, CriticalFollowUpResolve,
+    CriticalFollowUpEscalate
 )
 from ..dsa.audit_chain import compute_audit_hash, GENESIS_HASH
 from .websocket import manager
@@ -197,8 +198,27 @@ def scan_and_generate_critical_followups(db: Session) -> List[CriticalResultFoll
 
                 created_followups.append(followup)
 
-    if created_followups:
-        db.commit()
+    # Configurable Escalation Rule: Auto-escalate if unacknowledged beyond deadline
+    unacknowledged = (
+        db.query(CriticalResultFollowUp)
+        .filter(CriticalResultFollowUp.status == "Awaiting Acknowledgement")
+        .all()
+    )
+    for u in unacknowledged:
+        if u.deadline and u.deadline < iso_now:
+            u.status = "Escalated"
+            escalation_entry = f"[{iso_now[:19].replace('T', ' ')}] SYSTEM: Deadline expired ({u.deadline}). Escalated STAT to Rapid Response / On-Call Consultant."
+            u.action_taken = f"{u.action_taken or ''}\n{escalation_entry}".strip()
+            db.add(TimelineEvent(
+                patient_id=u.patient_id,
+                timestamp=iso_now,
+                event_type="Critical Alert Escalated",
+                title=f"ESCALATION: Critical Result Breached Deadline ({u.parameter_name})",
+                description=escalation_entry,
+                actor="Clinical Escalation Engine"
+            ))
+
+    db.commit()
     return created_followups
 
 
@@ -373,3 +393,56 @@ def resolve_critical_followup(
     db.commit()
     db.refresh(fu)
     return {"status": "success", "message": "Critical result follow-up successfully resolved.", "record": fu}
+
+
+@router.post("/{followup_id}/escalate")
+def escalate_critical_followup(
+    followup_id: str,
+    req: CriticalFollowUpEscalate,
+    db: Session = Depends(get_db)
+):
+    """
+    Manually escalates a critical diagnostic result to the Rapid Response Team,
+    Department Chair, or Senior Medical Officer when response is urgent or delayed.
+    Moves status to 'Escalated'.
+    """
+    fu = db.query(CriticalResultFollowUp).filter(CriticalResultFollowUp.id == followup_id).first()
+    if not fu:
+        raise HTTPException(status_code=404, detail="Critical follow-up record not found.")
+
+    iso_now = datetime.utcnow().isoformat()
+    fu.status = "Escalated"
+    new_entry = f"[{iso_now[:19].replace('T', ' ')}] ESCALATION by {req.escalated_by}: {req.escalation_reason}"
+    fu.action_taken = f"{fu.action_taken or ''}\n{new_entry}".strip()
+
+    # Timeline event
+    db.add(TimelineEvent(
+        patient_id=fu.patient_id,
+        timestamp=iso_now,
+        event_type="Critical Alert Escalated",
+        title=f"Critical Result Escalated: {fu.parameter_name}",
+        description=f"Escalated by {req.escalated_by}. Reason: {req.escalation_reason}",
+        actor=req.escalated_by
+    ))
+
+    # Audit trail
+    last_log = db.query(AuditLog).order_by(AuditLog.id.desc()).first()
+    prev_h = last_log.current_hash if last_log else GENESIS_HASH
+    details_str = f"Critical follow-up {fu.id} escalated by {req.escalated_by}. Reason: {req.escalation_reason}"
+    curr_h = compute_audit_hash(
+        prev_h, iso_now, req.escalated_by, "ESCALATE_CRITICAL_RESULT",
+        fu.id, details_str
+    )
+    db.add(AuditLog(
+        timestamp=iso_now,
+        actor=req.escalated_by,
+        action="ESCALATE_CRITICAL_RESULT",
+        record_id=fu.id,
+        details=details_str,
+        prev_hash=prev_h,
+        current_hash=curr_h,
+    ))
+
+    db.commit()
+    db.refresh(fu)
+    return {"status": "success", "message": "Critical result successfully escalated.", "record": fu}

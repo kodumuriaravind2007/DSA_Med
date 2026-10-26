@@ -174,6 +174,18 @@ export const api = {
     return res.json();
   },
 
+  runGraphBFS: async (startNodeId: string) => {
+    const res = await fetch(`${BASE_URL}/resources/graph/bfs/${encodeURIComponent(startNodeId)}`);
+    if (!res.ok) throw new Error('Failed to run BFS');
+    return res.json();
+  },
+
+  runGraphDFS: async (startNodeId: string) => {
+    const res = await fetch(`${BASE_URL}/resources/graph/dfs/${encodeURIComponent(startNodeId)}`);
+    if (!res.ok) throw new Error('Failed to run DFS');
+    return res.json();
+  },
+
   // Labs
   getClinicalCatalog: async () => {
     const res = await fetch(`${BASE_URL}/labs/catalog`);
@@ -261,7 +273,15 @@ export const api = {
     return res.candidates || [];
   },
 
-  reviewDuplicate: async (payload: { patient_id_1: string; patient_id_2: string; decision: string; notes: string; reviewed_by?: string }) => {
+  reviewDuplicate: async (payload: {
+    patient_id_1: string;
+    patient_id_2: string;
+    decision: string;
+    notes: string;
+    reviewed_by?: string;
+    similarity_percentage?: number;
+    matched_fields?: string;
+  }) => {
     const res = await fetch(`${BASE_URL}/duplicates/review`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -275,127 +295,6 @@ export const api = {
   getPatientFHIR: async (patientId: string) => {
     const res = await fetch(`${BASE_URL}/export/patient/${patientId}/fhir`);
     if (!res.ok) throw new Error('Failed to fetch FHIR export');
-    return res.json();
-  },
-
-  // DSA Board APIs
-  getLiveBST: async () => {
-    const res = await fetch(`${BASE_URL}/dsa/bst/live`);
-    if (!res.ok) throw new Error('Failed to load BST');
-    return res.json();
-  },
-
-  getDemoBST: async () => {
-    const res = await fetch(`${BASE_URL}/dsa/bst/demo`);
-    if (!res.ok) throw new Error('Failed to load demo BST');
-    return res.json();
-  },
-
-  demoBSTInsert: async (payload: { key: number; patient_id: string; patient_name: string; department?: string }) => {
-    const res = await fetch(`${BASE_URL}/dsa/bst/demo/insert`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-    if (!res.ok) throw new Error('Failed to insert in demo BST');
-    return res.json();
-  },
-
-  demoBSTSearch: async (key: number) => {
-    const res = await fetch(`${BASE_URL}/dsa/bst/demo/search?key=${key}`, {
-      method: 'POST',
-    });
-    if (!res.ok) throw new Error('Failed to search demo BST');
-    return res.json();
-  },
-
-  demoBSTDelete: async (key: number) => {
-    const res = await fetch(`${BASE_URL}/dsa/bst/demo/delete?key=${key}`, {
-      method: 'POST',
-    });
-    if (!res.ok) throw new Error('Failed to delete demo BST node');
-    return res.json();
-  },
-
-  getBSTDegradationDemo: async () => {
-    const res = await fetch(`${BASE_URL}/dsa/bst/degradation-demo`);
-    if (!res.ok) throw new Error('Failed to load degradation demo');
-    return res.json();
-  },
-
-  getDemoHeap: async () => {
-    const res = await fetch(`${BASE_URL}/dsa/heap/demo`);
-    if (!res.ok) throw new Error('Failed to load demo heap');
-    return res.json();
-  },
-
-  demoHeapInsert: async (payload: { patient_id: string; patient_name: string; priority: number; concern: string; department?: string }) => {
-    const res = await fetch(`${BASE_URL}/dsa/heap/demo/insert`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-    if (!res.ok) throw new Error('Failed to insert into demo heap');
-    return res.json();
-  },
-
-  demoHeapExtract: async () => {
-    const res = await fetch(`${BASE_URL}/dsa/heap/demo/extract-min`, {
-      method: 'POST',
-    });
-    if (!res.ok) throw new Error('Failed to extract min from heap');
-    return res.json();
-  },
-
-  getDemoHashTable: async () => {
-    const res = await fetch(`${BASE_URL}/dsa/hash-table/demo`);
-    if (!res.ok) throw new Error('Failed to load demo hash table');
-    return res.json();
-  },
-
-  demoHashLookup: async (key: string) => {
-    const res = await fetch(`${BASE_URL}/dsa/hash-table/demo/lookup?key=${encodeURIComponent(key)}`, {
-      method: 'POST',
-    });
-    if (!res.ok) throw new Error('Failed to lookup hash key');
-    return res.json();
-  },
-
-  demoHashInsert: async (key: string, value: string) => {
-    const res = await fetch(`${BASE_URL}/dsa/hash-table/demo/insert`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ key, value }),
-    });
-    if (!res.ok) throw new Error('Failed to insert into hash table');
-    return res.json();
-  },
-
-  runGraphBFS: async (startNodeId: string) => {
-    const res = await fetch(`${BASE_URL}/dsa/graph/bfs?start_node_id=${encodeURIComponent(startNodeId)}`, {
-      method: 'POST',
-    });
-    if (!res.ok) throw new Error('Failed to run BFS');
-    return res.json();
-  },
-
-  runGraphDFS: async (startNodeId: string) => {
-    const res = await fetch(`${BASE_URL}/dsa/graph/dfs?start_node_id=${encodeURIComponent(startNodeId)}`, {
-      method: 'POST',
-    });
-    if (!res.ok) throw new Error('Failed to run DFS');
-    return res.json();
-  },
-
-  getQueueVsTimeline: async (patientId: string) => {
-    const res = await fetch(`${BASE_URL}/dsa/queue-vs-timeline/${patientId}`);
-    if (!res.ok) throw new Error('Failed to load queue vs timeline');
-    return res.json();
-  },
-
-  getDSAComplexityMatrix: async () => {
-    const res = await fetch(`${BASE_URL}/dsa/complexity-matrix`);
-    if (!res.ok) throw new Error('Failed to load complexity matrix');
     return res.json();
   },
 
@@ -769,6 +668,16 @@ export const api = {
     return res.json();
   },
 
+  escalateCriticalResult: async (id: string, escalatedBy: string, escalationReason: string) => {
+    const res = await fetch(`${BASE_URL}/critical-results/${id}/escalate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ escalated_by: escalatedBy, escalation_reason: escalationReason }),
+    });
+    if (!res.ok) throw new Error('Failed to escalate critical result');
+    return res.json();
+  },
+
   // --- PATIENT HISTORY CHANGE ALERTS (Feature B) ---
   getUnreviewedChangeAlerts: async (): Promise<PatientHistoryChangeAlert[]> => {
     const res = await fetch(`${BASE_URL}/change-alerts/unreviewed`);
@@ -877,7 +786,7 @@ export const api = {
   submitMedicalCorrection: async (payload: {
     patient_id: string;
     record_type: string;
-    record_id: string;
+    record_id?: string;
     field_name: string;
     previous_value?: string;
     new_value: string;
@@ -888,7 +797,30 @@ export const api = {
     const res = await fetch(`${BASE_URL}/corrections`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({ ...payload, record_id: payload.record_id || `CORR-${Date.now()}` }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to submit medical record correction');
+    }
+    return res.json();
+  },
+
+  submitCorrection: async (payload: {
+    patient_id: string;
+    record_type: string;
+    record_id?: string;
+    field_name: string;
+    previous_value?: string;
+    new_value: string;
+    reason: string;
+    author_name: string;
+    author_role: string;
+  }) => {
+    const res = await fetch(`${BASE_URL}/corrections`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...payload, record_id: payload.record_id || `CORR-${Date.now()}` }),
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
@@ -898,6 +830,15 @@ export const api = {
   },
 
   approveMedicalCorrection: async (correctionId: string, doctorName: string, doctorId: string, decision: 'Approved' | 'Rejected') => {
+    const res = await fetch(
+      `${BASE_URL}/corrections/${correctionId}/approve?doctor_name=${encodeURIComponent(doctorName)}&doctor_id=${encodeURIComponent(doctorId)}&decision=${decision}`,
+      { method: 'POST' }
+    );
+    if (!res.ok) throw new Error('Failed to review correction');
+    return res.json();
+  },
+
+  approveCorrection: async (correctionId: string, doctorName: string, doctorId: string, decision: 'Approved' | 'Rejected') => {
     const res = await fetch(
       `${BASE_URL}/corrections/${correctionId}/approve?doctor_name=${encodeURIComponent(doctorName)}&doctor_id=${encodeURIComponent(doctorId)}&decision=${decision}`,
       { method: 'POST' }

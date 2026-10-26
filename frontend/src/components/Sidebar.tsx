@@ -149,13 +149,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
       title: 'Group 4 — DSA & Security',
       items: [
         {
-          id: 'dsa-board',
-          label: 'DSA Algorithms Board',
-          icon: GitBranch,
-          badge: 'Core Lab',
-          roles: ['doctor', 'nurse', 'receptionist', 'admin'],
-        },
-        {
           id: 'security-analytics',
           label: 'Cryptographic Audit',
           icon: ShieldCheck,

@@ -424,7 +424,7 @@ export interface CriticalFollowUp {
   unit: string;
   reference_range: string;
   critical_rationale: string;
-  status: 'Awaiting Acknowledgement' | 'Acknowledged' | 'Follow-up In Progress' | 'Resolved';
+  status: 'Awaiting Acknowledgement' | 'Acknowledged' | 'Follow-up In Progress' | 'Resolved' | 'Escalated';
   deadline: string;
   acknowledged_by: string;
   acknowledged_at?: string | null;

@@ -19,7 +19,6 @@ import { LivePatientFlowView } from './views/LivePatientFlowView';
 import { Patient360View } from './views/Patient360View';
 import { ResourceManagementView } from './views/ResourceManagementView';
 import { SecurityAnalyticsView } from './views/SecurityAnalyticsView';
-import { DsaBoardView } from './views/DsaBoardView';
 
 import { api } from './services/api';
 import { wsClient } from './services/websocket';
@@ -228,10 +227,6 @@ function MainApp() {
 
         {activeScreen === 'security-analytics' && (
           <SecurityAnalyticsView initialTab="audit" />
-        )}
-
-        {activeScreen === 'dsa-board' && (
-          <DsaBoardView />
         )}
       </main>
 

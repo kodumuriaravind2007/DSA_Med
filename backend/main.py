@@ -14,7 +14,7 @@ from .database import engine, Base, get_db, SessionLocal
 from .seed_data import seed_database
 from .routers import (
     patients, queue, resources, labs, cds,
-    audit, duplicates, analytics, export, dsa_api,
+    audit, duplicates, analytics, export,
     auth, appointments, mar, inpatient, nutrition,
     inventory, surge, qr, websocket,
     critical_results, change_alerts, handover, corrections
@@ -61,7 +61,6 @@ app.include_router(cds.router)
 app.include_router(audit.router)
 app.include_router(duplicates.router)
 app.include_router(export.router)
-app.include_router(dsa_api.router)
 app.include_router(critical_results.router)
 app.include_router(change_alerts.router)
 app.include_router(handover.router)

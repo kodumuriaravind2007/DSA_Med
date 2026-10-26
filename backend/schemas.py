@@ -524,6 +524,11 @@ class CriticalFollowUpResolve(BaseModel):
     resolved_by: str
 
 
+class CriticalFollowUpEscalate(BaseModel):
+    escalated_by: str
+    escalation_reason: str
+
+
 class CriticalFollowUpResponse(BaseModel):
     id: str
     patient_id: str

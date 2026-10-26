@@ -3,12 +3,12 @@ import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 import {
   Bed, Patient, Patient360, MARTask, PostOpCarePlan, MealDelivery, PostOpTask,
-  ClinicalHandover, CriticalFollowUp
+  ClinicalHandover, CriticalFollowUp, PatientHistoryChangeAlert
 } from '../types';
 import {
   HeartPulse, Pill, Clock, Activity, CheckCircle2,
   AlertTriangle, ArrowRight, UserCheck, Check, X, BedDouble, Apple,
-  RefreshCw, ClipboardList, AlertOctagon, ShieldAlert
+  RefreshCw, ClipboardList, AlertOctagon, ShieldAlert, History
 } from 'lucide-react';
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer,
@@ -33,6 +33,7 @@ export const NurseDashboard: React.FC<NurseDashboardProps> = ({ onSelectPatient 
   const [mealDeliveries, setMealDeliveries] = useState<MealDelivery[]>([]);
   const [handovers, setHandovers] = useState<ClinicalHandover[]>([]);
   const [criticalResults, setCriticalResults] = useState<CriticalFollowUp[]>([]);
+  const [changeAlerts, setChangeAlerts] = useState<PatientHistoryChangeAlert[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // REDUCED TO 3 FOCUSED, INTUITIVE NURSING TABS
@@ -84,7 +85,7 @@ export const NurseDashboard: React.FC<NurseDashboardProps> = ({ onSelectPatient 
 
   const loadPatientWardDetails = async (pid: string) => {
     try {
-      const [p360, mar, pop, trends, meals, hnds, crits] = await Promise.all([
+      const [p360, mar, pop, trends, meals, hnds, crits, alerts] = await Promise.all([
         api.getPatient360(pid).catch(() => null),
         api.getPatientMAR(pid).catch(() => []),
         api.getPostOpPlans(pid).catch(() => []),
@@ -92,6 +93,7 @@ export const NurseDashboard: React.FC<NurseDashboardProps> = ({ onSelectPatient 
         api.getMealDeliveries(pid).catch(() => []),
         api.getHandovers({ patient_id: pid }).catch(() => []),
         api.getCriticalResults({ patient_id: pid }).catch(() => []),
+        api.getPatientChangeAlerts(pid).catch(() => []),
       ]);
 
       setPatient360(p360);
@@ -102,6 +104,7 @@ export const NurseDashboard: React.FC<NurseDashboardProps> = ({ onSelectPatient 
       setMealDeliveries(meals || []);
       setHandovers(hnds || []);
       setCriticalResults(crits || []);
+      setChangeAlerts(alerts || []);
     } catch (err) {
       console.error('Failed to load patient ward details', err);
     }
@@ -119,6 +122,36 @@ export const NurseDashboard: React.FC<NurseDashboardProps> = ({ onSelectPatient 
       alert('Shift handover acknowledged. Transfer of clinical responsibility logged.');
     } catch (err: any) {
       alert(err.message || 'Failed to acknowledge handover');
+    }
+  };
+
+  const handleReviewChangeAlert = async (alertId: string) => {
+    try {
+      await api.reviewChangeAlert(alertId, nurseName);
+      if (selectedPatientId) {
+        const updated = await api.getPatientChangeAlerts(selectedPatientId);
+        setChangeAlerts(updated);
+      }
+    } catch (err: any) {
+      alert(err.message || 'Failed to review alert');
+    }
+  };
+
+  const handleAcknowledgeCriticalNurse = async (fu: CriticalFollowUp) => {
+    const note = prompt(
+      `Acknowledge critical result for ${fu.parameter_name} (${fu.result_value}): Enter bedside nursing observation / action note:`,
+      'Bedside vitals verified. Attending physician alerted STAT.'
+    );
+    if (!note) return;
+    try {
+      await api.acknowledgeCriticalResult(fu.id, nurseName, note);
+      if (selectedPatientId) {
+        const crits = await api.getCriticalResults({ patient_id: selectedPatientId });
+        setCriticalResults(crits);
+      }
+      alert('Critical alert acknowledged and bedside audit logged.');
+    } catch (err: any) {
+      alert(err.message || 'Failed to acknowledge critical result');
     }
   };
 
@@ -780,16 +813,30 @@ export const NurseDashboard: React.FC<NurseDashboardProps> = ({ onSelectPatient 
               <div className="bg-white rounded-3xl border border-[#E8DBC0] p-5 shadow-2xs space-y-3">
                 <h3 className="text-xs font-black text-[#7F011F] flex items-center gap-2 border-b border-[#E8DBC0] pb-2">
                   <AlertOctagon className="w-4 h-4 text-red-600" />
-                  Critical Diagnostic Panic Value Alerts
+                  Critical Diagnostic Panic Value Alerts ({criticalResults.length})
                 </h3>
 
                 {criticalResults.length > 0 ? (
                   <div className="space-y-2 text-xs">
                     {criticalResults.map((fu) => (
-                      <div key={fu.id} className="p-3 rounded-2xl bg-red-50/70 border border-red-200 space-y-1">
+                      <div key={fu.id} className="p-3 rounded-2xl bg-red-50/70 border border-red-200 space-y-1.5">
                         <div className="flex justify-between items-center">
-                          <span className="font-bold text-[#2A161B]">{fu.parameter_name}: <strong className="text-red-700">{fu.result_value} {fu.unit}</strong></span>
-                          <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-white border border-[#E8DBC0]">{fu.status}</span>
+                          <span className="font-bold text-[#2A161B]">
+                            {fu.parameter_name}: <strong className="text-red-700">{fu.result_value} {fu.unit}</strong>
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-white border border-[#E8DBC0]">
+                              {fu.status}
+                            </span>
+                            {fu.status === 'Awaiting Acknowledgement' && (
+                              <button
+                                onClick={() => handleAcknowledgeCriticalNurse(fu)}
+                                className="px-2.5 py-0.5 rounded-full bg-red-700 text-white text-[10px] font-bold hover:bg-red-800 transition"
+                              >
+                                Acknowledge Bedside
+                              </button>
+                            )}
+                          </div>
                         </div>
                         <p className="text-[11px] text-[#2A161B]">{fu.critical_rationale}</p>
                       </div>
@@ -797,6 +844,57 @@ export const NurseDashboard: React.FC<NurseDashboardProps> = ({ onSelectPatient 
                   </div>
                 ) : (
                   <p className="text-xs text-[#8C7B7E] text-center p-4">No active critical panic alerts flagged.</p>
+                )}
+              </div>
+
+              {/* Patient Clinical History Change Alerts (Feature B) */}
+              <div className="bg-white rounded-3xl border border-[#E8DBC0] p-5 shadow-2xs space-y-3">
+                <h3 className="text-xs font-black text-[#7F011F] flex items-center gap-2 border-b border-[#E8DBC0] pb-2">
+                  <History className="w-4 h-4 text-[#7F011F]" />
+                  Patient History & Observation Change Alerts ({changeAlerts.filter(a => !a.is_reviewed).length} Pending Review)
+                </h3>
+
+                {changeAlerts.length > 0 ? (
+                  <div className="space-y-2 text-xs max-h-56 overflow-y-auto pr-1">
+                    {changeAlerts.map((alert) => (
+                      <div
+                        key={alert.id}
+                        className={`p-3 rounded-2xl border text-xs space-y-1 ${
+                          alert.is_reviewed ? 'bg-[#FAF6EC]/50 border-[#E8DBC0]' : 'bg-amber-50/70 border-amber-300'
+                        }`}
+                      >
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-bold text-[#7F011F] text-[10px] px-2 py-0.5 rounded-full bg-white border border-[#E8DBC0]">
+                              {alert.record_type}
+                            </span>
+                            <span className="font-bold text-[#2A161B]">{alert.field_name}:</span>
+                            <span className="line-through text-red-700">{alert.old_value || 'None'}</span>
+                            <span>→</span>
+                            <span className="text-emerald-800 font-bold">{alert.new_value}</span>
+                          </div>
+
+                          <div>
+                            {alert.is_reviewed ? (
+                              <span className="text-[9px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-300">
+                                Reviewed
+                              </span>
+                            ) : (
+                              <button
+                                onClick={() => handleReviewChangeAlert(alert.id)}
+                                className="px-2.5 py-0.5 rounded-full bg-[#7F011F] text-[#F5EBD0] text-[10px] font-bold hover:bg-[#680119] transition"
+                              >
+                                Mark Reviewed
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                        <p className="text-[11px] text-[#6B5B5E]">Reason: {alert.reason}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-[#8C7B7E] text-center p-4">No recent history changes recorded for this patient.</p>
                 )}
               </div>
             </div>

@@ -12,7 +12,7 @@ import {
   ShieldCheck, Sparkles, Apple, Search, Check,
   RefreshCw, Eye, AlertOctagon,
   ClipboardList, QrCode, FileCheck, ShieldAlert, Unlock,
-  X
+  X, History
 } from 'lucide-react';
 
 interface DoctorDashboardProps {
@@ -286,6 +286,41 @@ export const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ onSelectPatien
       alert(err.message || 'Failed to submit action');
     } finally {
       setIsSubmittingCriticalAction(false);
+    }
+  };
+
+  const handleEscalateCritical = async (fu: CriticalFollowUp) => {
+    const clinicianName = activeDoctor?.name || user?.full_name || 'Dr. Attending';
+    const reason = prompt(
+      `Escalate STAT critical alert for ${fu.parameter_name} (${fu.result_value}): Enter clinical escalation reason / team destination:`,
+      'STAT Rapid Response / Senior Consultant intervention required due to acute clinical deterioration.'
+    );
+    if (!reason) return;
+    try {
+      await api.escalateCriticalResult(fu.id, clinicianName, reason);
+      if (selectedPatientId) {
+        const crits = await api.getCriticalResults({ patient_id: selectedPatientId });
+        setCriticalResults(crits);
+      }
+      alert('Critical result successfully escalated to Rapid Response / On-Call Consultant.');
+    } catch (err: any) {
+      alert(err.message || 'Failed to escalate critical result');
+    }
+  };
+
+  const handleAcknowledgeHandover = async (handoverId: string) => {
+    const clinicianName = activeDoctor?.name || user?.full_name || 'Dr. Attending';
+    const note = prompt('Enter physician handover acknowledgement note:', 'Bedside handover reviewed and accepted.');
+    if (!note) return;
+    try {
+      await api.acknowledgeHandover(handoverId, clinicianName, note);
+      if (selectedPatientId) {
+        const updated = await api.getHandovers({ patient_id: selectedPatientId });
+        setHandovers(updated);
+      }
+      alert('Handover acknowledged. Transfer of care accepted.');
+    } catch (err: any) {
+      alert(err.message || 'Failed to acknowledge handover');
     }
   };
 
@@ -1063,8 +1098,12 @@ export const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ onSelectPatien
                         className={`p-3 rounded-2xl border text-xs space-y-2 ${
                           fu.status === 'Awaiting Acknowledgement'
                             ? 'bg-red-50/80 border-red-300'
+                            : fu.status === 'Escalated'
+                            ? 'bg-rose-100/90 border-rose-500 ring-2 ring-rose-400'
                             : fu.status === 'Acknowledged'
                             ? 'bg-amber-50/80 border-amber-300'
+                            : fu.status === 'Follow-up In Progress'
+                            ? 'bg-blue-50/80 border-blue-300'
                             : 'bg-emerald-50/80 border-emerald-300'
                         }`}
                       >
@@ -1077,7 +1116,11 @@ export const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ onSelectPatien
                           </div>
 
                           <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase bg-white border border-[#E8DBC0]">
+                            <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase border ${
+                              fu.status === 'Escalated'
+                                ? 'bg-rose-700 text-white border-rose-800 animate-pulse'
+                                : 'bg-white border-[#E8DBC0]'
+                            }`}>
                               {fu.status}
                             </span>
                             {fu.deadline && fu.status !== 'Resolved' && (
@@ -1093,11 +1136,11 @@ export const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ onSelectPatien
                           {fu.critical_rationale}
                         </p>
 
-                        <div className="flex items-center gap-2 pt-1 border-t border-black/5">
+                        <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-black/5">
                           {fu.status === 'Awaiting Acknowledgement' && (
                             <button
                               onClick={() => handleAcknowledgeCritical(fu)}
-                              className="px-3 py-1 rounded-full bg-red-700 text-white text-[11px] font-bold hover:bg-red-800 transition"
+                              className="px-3 py-1 rounded-full bg-red-700 text-white text-[11px] font-bold hover:bg-red-800 transition shadow-2xs"
                             >
                               Acknowledge STAT
                             </button>
@@ -1110,6 +1153,14 @@ export const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ onSelectPatien
                               Document Action
                             </button>
                           )}
+                          {fu.status !== 'Resolved' && fu.status !== 'Escalated' && (
+                            <button
+                              onClick={() => handleEscalateCritical(fu)}
+                              className="px-3 py-1 rounded-full bg-rose-600 text-white text-[11px] font-bold hover:bg-rose-700 transition shadow-2xs"
+                            >
+                              Escalate STAT
+                            </button>
+                          )}
                           {fu.status !== 'Resolved' && (
                             <button
                               onClick={() => handleOpenCriticalActionModal(fu, 'resolve')}
@@ -1118,6 +1169,83 @@ export const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ onSelectPatien
                               Resolve
                             </button>
                           )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Patient History Change Alerts (Feature B) */}
+              {changeAlerts.length > 0 && (
+                <div className="bg-white rounded-3xl border border-[#E8DBC0] p-5 shadow-2xs space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#E8DBC0] pb-2.5">
+                    <div className="flex items-center gap-2">
+                      <History className="w-4 h-4 text-[#7F011F]" />
+                      <h3 className="text-xs font-black text-[#7F011F]">
+                        Patient History Change Alerts ({changeAlerts.filter(a => !a.is_reviewed).length} Unreviewed)
+                      </h3>
+                    </div>
+                    {changeAlerts.some(a => !a.is_reviewed) && (
+                      <button
+                        onClick={handleReviewAllAlerts}
+                        className="px-3 py-1 rounded-full bg-[#FAF6EC] border border-[#E8DBC0] text-[11px] font-bold text-[#7F011F] hover:bg-[#7F011F] hover:text-[#F5EBD0] transition"
+                      >
+                        Review All for Patient
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="space-y-2.5 max-h-60 overflow-y-auto pr-1">
+                    {changeAlerts.map((alert) => (
+                      <div
+                        key={alert.id}
+                        className={`p-3 rounded-2xl border text-xs space-y-1.5 transition ${
+                          alert.is_reviewed
+                            ? 'bg-[#FAF6EC]/50 border-[#E8DBC0]'
+                            : 'bg-amber-50/70 border-amber-300'
+                        }`}
+                      >
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-[#7F011F] px-2 py-0.5 rounded-full bg-white border border-[#E8DBC0] text-[10px]">
+                              {alert.record_type}
+                            </span>
+                            <span className="font-black text-xs text-[#2A161B]">
+                              {alert.field_name}:
+                            </span>
+                            <span className="line-through text-red-700 text-[11px]">
+                              {alert.old_value || 'None'}
+                            </span>
+                            <span className="text-[#8C7B7E] font-bold">→</span>
+                            <span className="text-emerald-800 font-bold text-[11px]">
+                              {alert.new_value}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            {alert.is_reviewed ? (
+                              <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-full border border-emerald-300">
+                                Reviewed by {alert.reviewed_by}
+                              </span>
+                            ) : (
+                              <button
+                                onClick={() => handleReviewChangeAlert(alert.id)}
+                                className="px-2.5 py-0.5 rounded-full bg-[#7F011F] text-[#F5EBD0] text-[10px] font-bold hover:bg-[#680119] transition"
+                              >
+                                Mark Reviewed
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        <p className="text-[11px] text-[#6B5B5E]">
+                          <strong>Clinical Context:</strong> {alert.reason}
+                        </p>
+
+                        <div className="text-[10px] text-[#8C7B7E] flex items-center justify-between">
+                          <span>Author: <strong>{alert.author_name}</strong> ({alert.author_role})</span>
+                          <span>{new Date(alert.created_at).toLocaleString()}</span>
                         </div>
                       </div>
                     ))}
@@ -1371,15 +1499,31 @@ export const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ onSelectPatien
                 {handovers.length > 0 && (
                   <div className="space-y-2 pt-2 border-t border-[#E8DBC0]">
                     <span className="text-[10px] font-black uppercase text-[#8C7B7E] block">Handover Log & Acknowledgement:</span>
-                    {handovers.slice(0, 3).map((h) => (
-                      <div key={h.id} className="p-2.5 rounded-xl bg-[#FAF6EC]/60 border border-[#E8DBC0] text-xs space-y-1">
+                    {handovers.slice(0, 5).map((h) => (
+                      <div key={h.id} className="p-3 rounded-2xl bg-[#FAF6EC]/60 border border-[#E8DBC0] text-xs space-y-1.5">
                         <div className="flex justify-between items-center text-[10px]">
                           <span className="font-bold text-[#7F011F]">{h.outgoing_staff_name} ({h.outgoing_role})</span>
-                          <span className={`px-2 py-0.2 rounded-full font-bold ${h.status === 'Acknowledged' ? 'bg-emerald-100 text-emerald-900' : 'bg-amber-100 text-amber-900'}`}>
-                            {h.status}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className={`px-2.5 py-0.5 rounded-full font-bold ${h.status === 'Acknowledged' ? 'bg-emerald-100 text-emerald-900 border border-emerald-300' : 'bg-amber-100 text-amber-900 border border-amber-300'}`}>
+                              {h.status}
+                            </span>
+                            {h.status === 'Submitted' && (
+                              <button
+                                type="button"
+                                onClick={() => handleAcknowledgeHandover(h.id)}
+                                className="px-2.5 py-0.5 rounded-full bg-[#7F011F] text-[#F5EBD0] text-[10px] font-bold hover:bg-[#680119] transition"
+                              >
+                                Acknowledge Handover
+                              </button>
+                            )}
+                          </div>
                         </div>
-                        <p className="text-[#2A161B] text-[11px]">{h.clinical_summary}</p>
+                        <p className="text-[#2A161B] text-[11px] bg-white p-2 rounded-xl border border-[#E8DBC0]">{h.clinical_summary}</p>
+                        {h.status === 'Acknowledged' && h.acknowledged_by && (
+                          <span className="text-[10px] text-emerald-800 font-bold block">
+                            Acknowledged by {h.acknowledged_by} ({h.acknowledged_at ? new Date(h.acknowledged_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''})
+                          </span>
+                        )}
                       </div>
                     ))}
                   </div>

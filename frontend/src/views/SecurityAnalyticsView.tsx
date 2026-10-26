@@ -212,6 +212,15 @@ export const SecurityAnalyticsView: React.FC<SecurityAnalyticsViewProps> = ({ in
                 <option value="ORDER_LAB">ORDER_LAB</option>
                 <option value="ENTER_LAB_RESULT">ENTER_LAB_RESULT</option>
                 <option value="START_TREATMENT">START_TREATMENT</option>
+                <option value="MEDICAL_RECORD_CORRECTION">MEDICAL_RECORD_CORRECTION</option>
+                <option value="CORRECTION_APPROVED">CORRECTION_APPROVED</option>
+                <option value="ACKNOWLEDGE_CRITICAL_RESULT">ACKNOWLEDGE_CRITICAL_RESULT</option>
+                <option value="ESCALATE_CRITICAL_RESULT">ESCALATE_CRITICAL_RESULT</option>
+                <option value="RESOLVE_CRITICAL_RESULT">RESOLVE_CRITICAL_RESULT</option>
+                <option value="CHANGE_ALERT_REVIEW">CHANGE_ALERT_REVIEW</option>
+                <option value="SECURE_QR_BEDSIDE_ACCESS">SECURE_QR_BEDSIDE_ACCESS</option>
+                <option value="TEMPORARY_QR_ACCESS_GRANTED">TEMPORARY_QR_ACCESS_GRANTED</option>
+                <option value="UNAUTHORIZED_BEDSIDE_ACCESS_ATTEMPT">UNAUTHORIZED_BEDSIDE_ACCESS_ATTEMPT</option>
               </select>
 
               <div className="relative w-64">
@@ -461,6 +470,12 @@ export const SecurityAnalyticsView: React.FC<SecurityAnalyticsViewProps> = ({ in
                         className="px-3.5 py-1.5 rounded-xl border border-[#E8DBC0] text-[#6E5A5E] hover:bg-[#FAF6EC] font-bold"
                       >
                         Confirm Distinct Patients
+                      </button>
+                      <button
+                        onClick={() => handleDuplicateReview(dup.patient_1.patient_id, dup.patient_2.patient_id, 'Requires Further Review')}
+                        className="px-3.5 py-1.5 rounded-xl border border-amber-300 bg-amber-50 text-amber-900 hover:bg-amber-100 font-bold"
+                      >
+                        Requires Further Review
                       </button>
                       <button
                         onClick={() => handleDuplicateReview(dup.patient_1.patient_id, dup.patient_2.patient_id, 'FLAG_MERGE_REQUIRED')}

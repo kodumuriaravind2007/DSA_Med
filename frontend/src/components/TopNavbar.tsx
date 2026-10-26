@@ -21,7 +21,6 @@ export type NavScreen =
   | 'nutrition-inventory'
   | 'surge-simulation'
   | 'hospital-analytics'
-  | 'dsa-board'
   | 'security-analytics';
 
 export type NavCategory = 'dashboards' | 'clinical' | 'resources' | 'dsa';
@@ -136,10 +135,9 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
     {
       id: 'dsa',
       label: 'DSA & Security',
-      icon: GitBranch,
-      defaultScreen: 'dsa-board',
+      icon: ShieldCheck,
+      defaultScreen: 'security-analytics',
       subParts: [
-        { id: 'dsa-board', label: 'DSA Algorithms Board', badge: 'Core Lab', icon: GitBranch, roles: ['doctor', 'nurse', 'receptionist', 'admin'] },
         { id: 'security-analytics', label: 'Cryptographic Audit', badge: 'SHA-256', icon: ShieldCheck, roles: ['doctor', 'admin', 'receptionist'] },
       ],
     },

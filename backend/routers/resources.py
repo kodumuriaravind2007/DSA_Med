@@ -8,7 +8,7 @@ Features:
 - Live Hospital Resource Graph with BFS, DFS, and path matching
 """
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from typing import List, Dict, Any, Optional
 from datetime import datetime
@@ -377,17 +377,21 @@ def get_resource_graph(db: Session = Depends(get_db)):
 
 
 @router.get("/graph/bfs/{node_id}")
-def run_bfs(node_id: str, db: Session = Depends(get_db)):
+@router.post("/graph/bfs")
+def run_bfs(node_id: Optional[str] = None, start_node_id: Optional[str] = Query(None), db: Session = Depends(get_db)):
     """Executes live BFS traversal from start node."""
     g = build_live_resource_graph(db)
-    return g.bfs_traversal(node_id)
+    target = node_id or start_node_id or "DEPT-EME"
+    return g.bfs_traversal(target)
 
 
 @router.get("/graph/dfs/{node_id}")
-def run_dfs(node_id: str, db: Session = Depends(get_db)):
+@router.post("/graph/dfs")
+def run_dfs(node_id: Optional[str] = None, start_node_id: Optional[str] = Query(None), db: Session = Depends(get_db)):
     """Executes live DFS traversal from start node."""
     g = build_live_resource_graph(db)
-    return g.dfs_traversal(node_id)
+    target = node_id or start_node_id or "DEPT-EME"
+    return g.dfs_traversal(target)
 
 
 @router.get("/graph/match-resource")
