@@ -16,7 +16,7 @@ import uuid
 from typing import List
 
 from ..database import get_db
-from ..models import Patient, Allergy, Bed, Doctor, TemporaryQRAccessGrant, AuditLog
+from ..models import Patient, Allergy, Bed, Doctor, TemporaryQRAccessGrant, AuditLog, User
 from ..schemas import (
     QRTokenResponse, QRVerifyRequest, QRDoctorVerifyRequest,
     TemporaryQRAccessRequest, TemporaryQRAccessResponse
@@ -159,7 +159,14 @@ def verify_doctor_qr_access(req: QRDoctorVerifyRequest, db: Session = Depends(ge
     if not patient:
         raise HTTPException(status_code=404, detail=f"Patient '{patient_id}' not found.")
 
-    role_lower = req.role.lower()
+    db_user = db.query(User).filter(User.username == req.username).first()
+    if db_user:
+        role_lower = db_user.role.lower()
+        doctor_id = db_user.doctor_id or req.doctor_id or req.user_id or req.username
+    else:
+        role_lower = req.role.lower()
+        doctor_id = req.doctor_id or req.user_id or req.username
+
     now_iso = datetime.utcnow().isoformat()
     is_authorized = False
     access_type = "Denied"
@@ -173,7 +180,6 @@ def verify_doctor_qr_access(req: QRDoctorVerifyRequest, db: Session = Depends(ge
         access_type = "Inpatient Ward Nurse"
     elif "doctor" in role_lower:
         # Check 1: Primary attending physician match
-        doctor_id = req.doctor_id or req.user_id or req.username
         if patient.assigned_doctor_id and doctor_id == patient.assigned_doctor_id:
             is_authorized = True
             access_type = "Primary Attending Physician"

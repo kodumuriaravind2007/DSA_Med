@@ -19,6 +19,7 @@ from ..models import Patient, Doctor, TimelineEvent, AuditLog
 from ..dsa.min_heap import PriorityMinHeap, PatientQueueNode
 from ..dsa.waiting_time_estimator import WaitingTimeEstimator
 from ..dsa.audit_chain import compute_audit_hash, GENESIS_HASH
+from .websocket import manager
 
 router = APIRouter(prefix="/api/queue", tags=["Patient Flow & Queue"])
 
@@ -151,6 +152,13 @@ def call_next_patient(actor: str = "Triage Clinician", db: Session = Depends(get
     )
     db.add(audit)
     db.commit()
+
+    manager.broadcast_sync("QUEUE_UPDATED", {
+        "called_patient": patient.patient_id,
+        "patient_name": patient.full_name,
+        "priority": patient.priority,
+        "status": "In Treatment"
+    })
 
     return {
         "status": "success",

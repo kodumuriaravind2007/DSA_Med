@@ -34,6 +34,14 @@ def generate_next_diet_id(db: Session) -> str:
                     max_num = num
             except ValueError:
                 pass
+    for obj in db.new:
+        if isinstance(obj, DietOrder) and obj.id and obj.id.startswith("DIET-"):
+            try:
+                num = int(obj.id.split("-")[1])
+                if num > max_num:
+                    max_num = num
+            except ValueError:
+                pass
     return f"DIET-{max_num + 1}"
 
 
@@ -44,6 +52,14 @@ def generate_next_meal_id(db: Session) -> str:
         if m_id and m_id.startswith("MEAL-"):
             try:
                 num = int(m_id.split("-")[1])
+                if num > max_num:
+                    max_num = num
+            except ValueError:
+                pass
+    for obj in db.new:
+        if isinstance(obj, MealDelivery) and obj.id and obj.id.startswith("MEAL-"):
+            try:
+                num = int(obj.id.split("-")[1])
                 if num > max_num:
                     max_num = num
             except ValueError:
@@ -116,6 +132,7 @@ def create_diet_order(req: DietOrderCreate, db: Session = Depends(get_db)):
                 delivered_at=None
             )
             db.add(delivery)
+            db.flush()
     else:
         # If NPO, block any existing scheduled meals
         db.query(MealDelivery).filter(

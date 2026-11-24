@@ -14,10 +14,11 @@ from .database import engine, Base, get_db, SessionLocal
 from .seed_data import seed_database
 from .routers import (
     patients, queue, resources, labs, cds,
-    audit, duplicates, analytics, export,
+    audit, duplicates, analytics, export, dsa_api,
     auth, appointments, mar, inpatient, nutrition,
     inventory, surge, qr, websocket,
-    critical_results, change_alerts, handover, corrections
+    critical_results, change_alerts, handover, corrections,
+    clinical_intelligence
 )
 
 # Initialize database schema
@@ -61,10 +62,12 @@ app.include_router(cds.router)
 app.include_router(audit.router)
 app.include_router(duplicates.router)
 app.include_router(export.router)
+app.include_router(dsa_api.router)
 app.include_router(critical_results.router)
 app.include_router(change_alerts.router)
 app.include_router(handover.router)
 app.include_router(corrections.router)
+app.include_router(clinical_intelligence.router)
 
 
 @app.get("/api/health")
@@ -83,6 +86,10 @@ def health_check():
             "ExplainableRuleEngine (Clinical Decision Support)",
             "CapacityQueueEstimator (Waiting Time & Load Forecast)",
             "FHIRInteroperability (Structured JSON Export)",
+            "NEWS2DeteriorationEngine (Continuous Physiological Risk & Rapid Response)",
+            "PharmacologicalInteractionGraph (Bipartite DDI & Contraindication Network)",
+            "STARTMassCasualtyTriage (Disaster RPM Protocol & Surge Capacity Modeling)",
+            "GlassBoxDSAVisualizer (Interactive Levenshtein DP Matrix & Min-Heap Step-Through)",
         ]
     }
 
@@ -116,5 +123,4 @@ if os.path.exists(frontend_dist_dir):
 
 if __name__ == "__main__":
     import uvicorn
-    port = int(os.environ.get("PORT", 8000))
-    uvicorn.run("backend.main:app", host="0.0.0.0", port=port, reload=False)
+    uvicorn.run("backend.main:app", host="0.0.0.0", port=8000, reload=True)

@@ -44,7 +44,11 @@ class WaitingTimeEstimator:
         p3_ahead = 0
 
         for p in patients_ahead:
-            prio = p.get("priority", 3)
+            raw_prio = p.get("priority", 3)
+            try:
+                prio = int(raw_prio)
+            except (ValueError, TypeError):
+                prio = 3
             duration = PRIORITY_SERVICE_DURATIONS.get(prio, 15)
             total_service_ahead_mins += duration
             if prio == 1:
@@ -58,7 +62,9 @@ class WaitingTimeEstimator:
         estimated_minutes = round(total_service_ahead_mins / doctors)
 
         # Minimum baseline
-        if patient_priority == 1:
+        if len(patients_ahead) == 0:
+            estimated_minutes = 0 if int(patient_priority) == 1 else min(estimated_minutes, 5)
+        elif int(patient_priority) == 1:
             estimated_minutes = min(estimated_minutes, 5)  # Immediate triage
         else:
             estimated_minutes = max(estimated_minutes, 5)

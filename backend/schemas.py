@@ -279,236 +279,7 @@ class UserProfileResponse(BaseModel):
     created_at: str
     model_config = ConfigDict(from_attributes=True)
 
-
-class PatientProfileUpdateRequest(BaseModel):
-    phone: Optional[str] = None
-    email: Optional[str] = None
-    address: Optional[str] = None
-    reported_concern: Optional[str] = None
-
-
-# --- Appointment Schemas ---
-class AppointmentCreate(BaseModel):
-    patient_id: str
-    doctor_id: str
-    department: str
-    scheduled_time: str
-    reason: Optional[str] = ""
-
-
-class AppointmentResponse(BaseModel):
-    id: str
-    patient_id: str
-    doctor_id: str
-    department: str
-    scheduled_time: str
-    reason: str
-    status: str
-    created_at: str
-    model_config = ConfigDict(from_attributes=True)
-
-
-# --- MAR (Medication Administration Record) Schemas ---
-class MARTaskResponse(BaseModel):
-    id: str
-    medication_id: Optional[int] = None
-    patient_id: str
-    medication_name: str
-    dosage: str
-    route: str
-    scheduled_time: str
-    administered_time: Optional[str] = None
-    status: str  # Due, Due Soon, Administered, Delayed, Held, Omitted, Requires Review
-    administered_by: str
-    hold_reason: str
-    notes: str
-    created_at: str
-    model_config = ConfigDict(from_attributes=True)
-
-
-class MARAdministerRequest(BaseModel):
-    administered_by: str = "Nurse"
-    notes: Optional[str] = ""
-
-
-class MARHoldRequest(BaseModel):
-    reason: str
-    action: str = Field("Held", pattern="^(Held|Delayed|Omitted)$")
-    nurse_name: str = "Nurse"
-
-
-# --- Post-Op Care Schemas ---
-class PostOpTaskResponse(BaseModel):
-    id: str
-    plan_id: str
-    patient_id: str
-    task_type: str
-    title: str
-    due_time: str
-    completed_time: Optional[str] = None
-    status: str
-    notes: str
-    nurse_name: str
-    model_config = ConfigDict(from_attributes=True)
-
-
-class PostOpCarePlanResponse(BaseModel):
-    id: str
-    patient_id: str
-    doctor_id: str
-    procedure_name: str
-    surgery_date: str
-    target_discharge_date: Optional[str] = None
-    status: str
-    wound_care_instructions: str
-    mobility_goal: str
-    created_at: str
-    tasks: List[PostOpTaskResponse] = []
-    model_config = ConfigDict(from_attributes=True)
-
-
-class PostOpCarePlanCreate(BaseModel):
-    patient_id: str
-    doctor_id: str
-    procedure_name: str
-    surgery_date: str
-    target_discharge_date: Optional[str] = None
-    wound_care_instructions: Optional[str] = ""
-    mobility_goal: Optional[str] = ""
-
-
-class PostOpTaskCompleteRequest(BaseModel):
-    nurse_name: str = "Ward Nurse"
-    notes: Optional[str] = ""
-
-
-# --- Nutrition & Meal Delivery Schemas ---
-class DietOrderCreate(BaseModel):
-    patient_id: str
-    diet_type: str = Field(..., pattern="^(Regular|Diabetic|Renal|Cardiac|Soft|Clear Liquid|NPO)$")
-    allergens_restricted: Optional[str] = ""
-    texture: Optional[str] = "Standard"
-    is_npo: bool = False
-    ordering_clinician: Optional[str] = "Attending Physician"
-    notes: Optional[str] = ""
-
-
-class DietOrderResponse(BaseModel):
-    id: str
-    patient_id: str
-    diet_type: str
-    allergens_restricted: str
-    texture: str
-    is_npo: bool
-    status: str
-    ordering_clinician: str
-    notes: str
-    created_at: str
-    model_config = ConfigDict(from_attributes=True)
-
-
-class MealDeliveryResponse(BaseModel):
-    id: str
-    diet_order_id: str
-    patient_id: str
-    meal_period: str
-    scheduled_date: str
-    scheduled_time: str
-    delivery_status: str
-    allergy_check_passed: bool
-    conflict_details: str
-    delivered_by: str
-    delivered_at: Optional[str] = None
-    model_config = ConfigDict(from_attributes=True)
-
-
-# --- Inventory & Supply Schemas ---
-class InventoryItemResponse(BaseModel):
-    id: str
-    item_code: str
-    name: str
-    category: str
-    unit: str
-    quantity_on_hand: int
-    reserved_quantity: int
-    reorder_threshold: int
-    batch_number: str
-    expiry_date: str
-    location: str
-    model_config = ConfigDict(from_attributes=True)
-
-
-class StockTransactionCreate(BaseModel):
-    item_id: str
-    transaction_type: str = Field(..., pattern="^(Receipt|Issue|Adjustment|Reserved)$")
-    quantity: int
-    reference_id: Optional[str] = ""
-    actor: str = "Pharmacy Staff"
-    notes: Optional[str] = ""
-
-
-class StockTransactionResponse(BaseModel):
-    id: int
-    item_id: str
-    transaction_type: str
-    quantity: int
-    reference_id: str
-    actor: str
-    timestamp: str
-    notes: str
-    model_config = ConfigDict(from_attributes=True)
-
-
-# --- Hospital Surge Simulation Schemas ---
-class SurgeSimulationRequest(BaseModel):
-    arrival_surge_multiplier: float = Field(default=1.5, ge=0.5, le=5.0)
-    doctor_shortage_pct: float = Field(default=20.0, ge=0.0, le=80.0)
-    bed_capacity_reduction_pct: float = Field(default=15.0, ge=0.0, le=75.0)
-    supply_strain_factor: float = Field(default=1.3, ge=1.0, le=4.0)
-
-
-class SurgeSimulationResponse(BaseModel):
-    scenario_params: Dict[str, Any]
-    baseline_stats: Dict[str, Any]
-    simulated_stats: Dict[str, Any]
-    department_load: List[Dict[str, Any]]
-    projected_queue: List[Dict[str, Any]]
-    critical_bottleneck: str
-    recommendations: List[str]
-
-
-# --- QR Code Schemas ---
-class QRTokenResponse(BaseModel):
-    patient_id: str
-    full_name: str
-    qr_token: str
-    issued_at: str
-    verification_url: str
-
-
-class QRVerifyRequest(BaseModel):
-    qr_token: str
-
-
-# =====================================================================
-# INTELLIGENT CLINICAL FEATURES: PYDANTIC SCHEMAS
-# =====================================================================
-
-# --- Feature A: Critical Result Follow-Up Schemas ---
-class CriticalFollowUpCreate(BaseModel):
-    patient_id: str
-    lab_order_id: str
-    lab_result_id: Optional[int] = None
-    test_name: str
-    parameter_name: str
-    result_value: str
-    unit: Optional[str] = ""
-    reference_range: Optional[str] = ""
-    critical_rationale: str
-    deadline: Optional[str] = ""
-    assigned_doctor_id: Optional[str] = None
-
-
+# --- Feature A: Critical Results Follow-Up Schemas ---
 class CriticalFollowUpAcknowledge(BaseModel):
     acknowledged_by: str
     notes: Optional[str] = ""
@@ -522,11 +293,6 @@ class CriticalFollowUpAction(BaseModel):
 class CriticalFollowUpResolve(BaseModel):
     resolution_details: str
     resolved_by: str
-
-
-class CriticalFollowUpEscalate(BaseModel):
-    escalated_by: str
-    escalation_reason: str
 
 
 class CriticalFollowUpResponse(BaseModel):
@@ -587,14 +353,14 @@ class PatientHistoryChangeAlertResponse(BaseModel):
 # --- Feature C: Clinical Handover Schemas ---
 class ClinicalHandoverCreate(BaseModel):
     patient_id: str
-    ward: Optional[str] = "General Ward"
+    ward: Optional[str] = ""
     outgoing_staff_id: Optional[str] = ""
     outgoing_staff_name: str
-    outgoing_role: str = "doctor"  # doctor or nurse
+    outgoing_role: str
     incoming_staff_name: Optional[str] = ""
-    incoming_role: Optional[str] = "nurse"
+    incoming_role: Optional[str] = ""
     clinical_summary: str
-    pending_tasks: Optional[str] = "[]"
+    pending_tasks: Optional[str] = ""
     critical_concerns: Optional[str] = ""
     contingency_plans: Optional[str] = ""
     notes: Optional[str] = ""
@@ -622,26 +388,19 @@ class ClinicalHandoverResponse(BaseModel):
     version: int
     created_at: str
     acknowledged_at: Optional[str] = None
-    acknowledged_by: str
-    notes: str
+    acknowledged_by: Optional[str] = ""
+    notes: Optional[str] = ""
     model_config = ConfigDict(from_attributes=True)
 
 
-# --- Feature D: Duplicate Review & Data Quality Schemas ---
-class DuplicateReviewCreate(BaseModel):
-    patient_id_1: str
-    patient_id_2: str
-    decision: str  # "Confirmed Duplicate", "Not a Duplicate", "Requires Further Review"
-    notes: Optional[str] = ""
-    reviewed_by: str = "Records Officer"
-
-
+# --- Feature D: Data Quality & Duplicate Review Schemas ---
 class DataQualityIssue(BaseModel):
     patient_id: str
     patient_name: str
-    issue_type: str  # Missing National ID, Unassigned Doctor, Missing Vitals, etc.
-    severity: str    # High, Medium, Low
+    issue_type: str
+    severity: str
     description: str
+    suggested_action: Optional[str] = ""
 
 
 class DataQualityReportResponse(BaseModel):
@@ -652,17 +411,17 @@ class DataQualityReportResponse(BaseModel):
     timestamp: str
 
 
-# --- Feature E: Medical Correction History Schemas ---
+# --- Feature E: Medical Corrections Schemas ---
 class MedicalCorrectionCreate(BaseModel):
     patient_id: str
-    record_type: str  # Diagnosis, Prescription, VitalSign, Allergy, Demographics
-    record_id: str
+    record_type: str
+    record_id: Optional[str] = ""
     field_name: str
     previous_value: Optional[str] = ""
     new_value: str
-    reason: str
     author_name: str
     author_role: str
+    reason: str
 
 
 class MedicalCorrectionResponse(BaseModel):
@@ -673,20 +432,231 @@ class MedicalCorrectionResponse(BaseModel):
     field_name: str
     previous_value: str
     new_value: str
-    user_id: str
     author_name: str
     author_role: str
     reason: str
     approval_status: str
-    approver_id: str
-    approver_name: str
+    approver_id: Optional[str] = ""
+    approver_name: Optional[str] = ""
     approved_at: Optional[str] = None
     timestamp: str
     audit_hash: str
     model_config = ConfigDict(from_attributes=True)
 
 
-# --- Feature F (Phase 4): QR Doctor-Specific Access Schemas ---
+# --- Appointments Schemas ---
+class AppointmentCreate(BaseModel):
+    patient_id: str
+    doctor_id: str
+    department: str
+    scheduled_time: str
+    reason: Optional[str] = ""
+
+
+class AppointmentResponse(BaseModel):
+    id: str
+    patient_id: str
+    doctor_id: str
+    department: str
+    scheduled_time: str
+    reason: str
+    status: str
+    created_at: str
+    model_config = ConfigDict(from_attributes=True)
+
+
+# --- Patient Profile Update Schema ---
+class PatientProfileUpdateRequest(BaseModel):
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    address: Optional[str] = None
+    reported_concern: Optional[str] = None
+
+
+# --- MAR (Medication Administration Record) Schemas ---
+class MARAdministerRequest(BaseModel):
+    administered_by: str = "Registered Nurse"
+    notes: Optional[str] = ""
+
+
+class MARHoldRequest(BaseModel):
+    reason: str
+    action: str = "Held"
+    nurse_name: str = "Registered Nurse"
+    notes: Optional[str] = ""
+
+
+class MARTaskResponse(BaseModel):
+    id: str
+    medication_id: Optional[int] = None
+    patient_id: str
+    medication_name: str
+    dosage: str
+    route: str
+    scheduled_time: str
+    administered_time: Optional[str] = None
+    status: str
+    administered_by: Optional[str] = ""
+    hold_reason: Optional[str] = ""
+    notes: Optional[str] = ""
+    created_at: str
+    model_config = ConfigDict(from_attributes=True)
+
+
+# --- Inpatient & Post-Op Schemas ---
+class PostOpTaskResponse(BaseModel):
+    id: str
+    plan_id: str
+    patient_id: str
+    task_type: str
+    title: str
+    due_time: str
+    completed_time: Optional[str] = None
+    status: str
+    notes: Optional[str] = ""
+    nurse_name: Optional[str] = ""
+    model_config = ConfigDict(from_attributes=True)
+
+
+class PostOpTaskCompleteRequest(BaseModel):
+    nurse_name: str
+    notes: Optional[str] = ""
+
+
+class PostOpCarePlanCreate(BaseModel):
+    patient_id: str
+    doctor_id: str
+    procedure_name: str
+    surgery_date: str
+    target_discharge_date: Optional[str] = None
+    wound_care_instructions: Optional[str] = None
+    mobility_goal: Optional[str] = None
+
+
+class PostOpCarePlanResponse(BaseModel):
+    id: str
+    patient_id: str
+    doctor_id: str
+    procedure_name: str
+    surgery_date: str
+    target_discharge_date: Optional[str] = ""
+    status: str
+    wound_care_instructions: str
+    mobility_goal: str
+    created_at: str
+    tasks: List[PostOpTaskResponse] = []
+    model_config = ConfigDict(from_attributes=True)
+
+
+# --- Nutrition Schemas ---
+class DietOrderCreate(BaseModel):
+    patient_id: str
+    diet_type: str
+    allergens_restricted: Optional[str] = ""
+    texture: Optional[str] = "Standard"
+    is_npo: bool = False
+    ordering_clinician: Optional[str] = "Attending Physician"
+    notes: Optional[str] = ""
+
+
+class DietOrderResponse(BaseModel):
+    id: str
+    patient_id: str
+    diet_type: str
+    allergens_restricted: str
+    texture: str
+    is_npo: bool
+    status: str
+    ordering_clinician: str
+    notes: str
+    created_at: str
+    model_config = ConfigDict(from_attributes=True)
+
+
+class MealDeliveryResponse(BaseModel):
+    id: str
+    diet_order_id: str
+    patient_id: str
+    meal_period: str
+    scheduled_date: str
+    scheduled_time: str
+    delivery_status: str
+    allergy_check_passed: bool
+    conflict_details: str
+    delivered_by: str
+    delivered_at: Optional[str] = None
+    model_config = ConfigDict(from_attributes=True)
+
+
+# --- Inventory Schemas ---
+class InventoryItemResponse(BaseModel):
+    id: str
+    item_code: str
+    name: str
+    category: str
+    unit: str
+    quantity_on_hand: int
+    reserved_quantity: int
+    reorder_threshold: int
+    batch_number: str
+    expiry_date: str
+    location: str
+    model_config = ConfigDict(from_attributes=True)
+
+
+class StockTransactionCreate(BaseModel):
+    item_id: str
+    transaction_type: str
+    quantity: int
+    reference_id: Optional[str] = ""
+    actor: str = "Inventory Officer"
+    notes: Optional[str] = ""
+
+
+class StockTransactionResponse(BaseModel):
+    id: int
+    item_id: str
+    transaction_type: str
+    quantity: int
+    reference_id: str
+    actor: str
+    timestamp: str
+    notes: str
+    model_config = ConfigDict(from_attributes=True)
+
+
+# --- Surge Forecasting Schemas ---
+class SurgeSimulationRequest(BaseModel):
+    arrival_surge_multiplier: float = 1.5
+    doctor_shortage_pct: float = 0.0
+    bed_capacity_reduction_pct: float = 0.0
+    supply_strain_factor: float = 1.0
+
+
+class SurgeSimulationResponse(BaseModel):
+    scenario_params: Dict[str, Any]
+    baseline_stats: Dict[str, Any]
+    simulated_stats: Dict[str, Any]
+    department_load: List[Dict[str, Any]]
+    projected_queue: List[Dict[str, Any]]
+    critical_bottleneck: str
+    recommendations: List[str]
+
+
+# --- QR Code & Care Team Access Schemas ---
+class QRTokenResponse(BaseModel):
+    patient_id: str
+    full_name: Optional[str] = ""
+    qr_token: str
+    issued_at: Optional[str] = ""
+    verification_url: Optional[str] = ""
+    expires_at: Optional[str] = None
+
+
+class QRVerifyRequest(BaseModel):
+    qr_token: str
+
+
 class QRDoctorVerifyRequest(BaseModel):
     qr_token: str
     user_id: Optional[str] = None
@@ -713,3 +683,63 @@ class TemporaryQRAccessResponse(BaseModel):
     is_revoked: bool
     created_at: str
     model_config = ConfigDict(from_attributes=True)
+
+
+# --- Clinical Intelligence & DSA Visualizer Schemas ---
+class NEWS2CalculateRequest(BaseModel):
+    patient_id: Optional[str] = None
+    respiration_rate: Optional[int] = None
+    oxygen_saturation: Optional[float] = None
+    supplemental_oxygen: bool = False
+    systolic_bp: Optional[int] = None
+    pulse_rate: Optional[int] = None
+    consciousness_avpu: str = "A"
+    temperature_f: Optional[float] = None
+    temperature_c: Optional[float] = None
+    spo2_scale: int = 1
+
+
+class DrugInteractionCheckRequest(BaseModel):
+    candidate_drug: str
+    active_medications: List[str] = []
+    known_conditions: Optional[List[str]] = None
+    patient_allergies: Optional[List[str]] = None
+    biomarkers: Optional[Dict[str, float]] = None
+
+
+class MCISimulationRequest(BaseModel):
+    scenario: str = "Highway Pileup"
+
+
+class HeapStepthroughRequest(BaseModel):
+    initial_elements: List[int] = [10, 20, 15, 30, 40]
+    new_val: int = 5
+
+
+# --- Advanced Research Engines Schemas ---
+class APQSimulateRequest(BaseModel):
+    simulated_elapsed_mins: int = 45
+    patients_override: Optional[List[Dict[str, Any]]] = None
+
+
+class HungarianBedMatchRequest(BaseModel):
+    patients_override: Optional[List[Dict[str, Any]]] = None
+    beds_override: Optional[List[Dict[str, Any]]] = None
+
+
+class TrajectoryAnalysisRequest(BaseModel):
+    patient_id: Optional[str] = None
+    vitals_series: Optional[List[Dict[str, Any]]] = None
+    ewma_lambda: float = 0.4
+
+
+class MerkleProofRequest(BaseModel):
+    record_index: int = 0
+    records: Optional[List[Dict[str, Any]]] = None
+
+
+class MerkleVerifyRequest(BaseModel):
+    leaf_data: Dict[str, Any]
+    proof_path: List[Dict[str, Any]]
+    expected_root: str
+

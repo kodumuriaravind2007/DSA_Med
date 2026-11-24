@@ -330,5 +330,3 @@ The application includes two secure entry points with 1-click login profiles:
 - **Hospital Crisis Surge Simulation:** Algorithmic forecasting of queue delays, physician capacity limits, and bed exhaustion horizons.
 - **Tamper-Evident SHA-256 Audit Trail:** Blockchain-inspired cryptographic chaining from Genesis Block for compliance.
 - **Interoperability:** Structured JSON exports modeled on HL7 FHIR R4 specifications.
-#   D S A _ M e d  
- 

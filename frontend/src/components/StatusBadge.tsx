@@ -12,8 +12,8 @@ export const PriorityBadge: React.FC<PriorityBadgeProps> = ({ priority, showIcon
 
   if (priority === 1) {
     return (
-      <span className={`inline-flex items-center gap-1.5 font-bold rounded-full bg-[#FAF0F2] text-[#7F011F] border border-[#7F011F]/30 ${sizeClasses}`}>
-        {showIcon && <ShieldAlert className="w-3.5 h-3.5 text-[#7F011F] animate-pulse" />}
+      <span className={`inline-flex items-center gap-1.5 font-bold rounded-full bg-[#FFF7F2] text-[#EC5E27] border border-[#EC5E27]/30 ${sizeClasses}`}>
+        {showIcon && <ShieldAlert className="w-3.5 h-3.5 text-[#EC5E27] animate-pulse" />}
         <span>Priority 1 — Critical</span>
       </span>
     );
@@ -26,8 +26,8 @@ export const PriorityBadge: React.FC<PriorityBadgeProps> = ({ priority, showIcon
     );
   }
   return (
-    <span className={`inline-flex items-center gap-1.5 font-medium rounded-full bg-[#FAF6EC] text-[#6E5A5E] border border-[#E8DBC0] ${sizeClasses}`}>
-      {showIcon && <Clock className="w-3.5 h-3.5 text-[#8C7B7E]" />}
+    <span className={`inline-flex items-center gap-1.5 font-medium rounded-full bg-[#FDFDF1] text-[#736860] border border-[#E8E4C9] ${sizeClasses}`}>
+      {showIcon && <Clock className="w-3.5 h-3.5 text-[#8E8278]" />}
       <span>Priority 3 — Normal</span>
     </span>
   );
@@ -110,7 +110,7 @@ export const BedBadge: React.FC<BedBadgeProps> = ({ status }) => {
     case 'Available':
       return <span className="px-3 py-1 text-xs font-bold rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300 shadow-2xs">Available</span>;
     case 'Occupied':
-      return <span className="px-3 py-1 text-xs font-bold rounded-full bg-[#FAF0F2] text-[#7F011F] border border-[#7F011F]/30 shadow-2xs">Occupied</span>;
+      return <span className="px-3 py-1 text-xs font-bold rounded-full bg-[#FFF7F2] text-[#EC5E27] border border-[#EC5E27]/30 shadow-2xs">Occupied</span>;
     case 'Cleaning':
       return <span className="px-3 py-1 text-xs font-bold rounded-full bg-amber-100 text-amber-900 border border-amber-300 shadow-2xs">Cleaning</span>;
     case 'Reserved':

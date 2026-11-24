@@ -4,7 +4,7 @@ Broadcasts real-time events across Receptionist, Doctor, Nurse, Admin, and Patie
 """
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from datetime import datetime
 import asyncio
 import json
@@ -24,13 +24,20 @@ class ConnectionManager:
         if websocket in self.active_connections:
             self.active_connections.remove(websocket)
 
-    async def broadcast(self, event_type: str, data: Any):
-        """Asynchronously broadcasts an event payload to all connected clients."""
-        payload = {
-            "type": event_type,
-            "data": data,
-            "timestamp": datetime.now().isoformat(),
-        }
+    async def broadcast(self, event_type: Any, data: Any = None):
+        """Asynchronously broadcasts an event payload to all connected clients.
+        Accepts either broadcast("EVENT_NAME", data) or broadcast({"type": "EVENT_NAME", ...}).
+        """
+        if isinstance(event_type, dict) and data is None:
+            payload = dict(event_type)
+            if "timestamp" not in payload:
+                payload["timestamp"] = datetime.now().isoformat()
+        else:
+            payload = {
+                "type": str(event_type),
+                "data": data,
+                "timestamp": datetime.now().isoformat(),
+            }
         text_data = json.dumps(payload, default=str)
         dead_connections = []
         for connection in list(self.active_connections):
@@ -41,8 +48,10 @@ class ConnectionManager:
         for dead in dead_connections:
             self.disconnect(dead)
 
-    def broadcast_sync(self, event_type: str, data: Any):
-        """Thread-safe and synchronous trigger to broadcast an event from synchronous endpoints."""
+    def broadcast_sync(self, event_type: Any, data: Any = None):
+        """Thread-safe and synchronous trigger to broadcast an event from synchronous endpoints.
+        Accepts either broadcast_sync("EVENT_NAME", data) or broadcast_sync({"type": "EVENT_NAME", ...}).
+        """
         try:
             loop = asyncio.get_running_loop()
             if loop.is_running():

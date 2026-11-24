@@ -213,13 +213,14 @@ def enter_lab_result(order_id: str, req: LabResultCreate, db: Session = Depends(
     # Audit
     last = db.query(AuditLog).order_by(AuditLog.id.desc()).first()
     prev_h = last.current_hash if last else GENESIS_HASH
-    curr_h = compute_audit_hash(prev_h, iso_now, req.verified_by or "Pathologist", "ENTER_LAB_RESULT", order_id, f"{req.parameter_name}={req.result_value}")
+    details_str = f"{req.parameter_name}: {req.result_value} {req.unit} ({req.flag})"
+    curr_h = compute_audit_hash(prev_h, iso_now, req.verified_by or "Pathologist", "ENTER_LAB_RESULT", order_id, details_str)
     db.add(AuditLog(
         timestamp=iso_now,
         actor=req.verified_by or "Pathologist",
         action="ENTER_LAB_RESULT",
         record_id=order_id,
-        details=f"{req.parameter_name}: {req.result_value} {req.unit} ({req.flag})",
+        details=details_str,
         prev_hash=prev_h,
         current_hash=curr_h,
     ))
@@ -250,13 +251,14 @@ def update_lab_status(order_id: str, new_status: str, actor: str = "Laboratory S
 
     last = db.query(AuditLog).order_by(AuditLog.id.desc()).first()
     prev_h = last.current_hash if last else GENESIS_HASH
-    curr_h = compute_audit_hash(prev_h, iso_now, actor, "UPDATE_LAB_STATUS", order_id, f"Status: {new_status}")
+    details_str = f"Order {order_id} ({order.test_name}) updated to {new_status}"
+    curr_h = compute_audit_hash(prev_h, iso_now, actor, "UPDATE_LAB_STATUS", order_id, details_str)
     db.add(AuditLog(
         timestamp=iso_now,
         actor=actor,
         action="UPDATE_LAB_STATUS",
         record_id=order_id,
-        details=f"Order {order_id} ({order.test_name}) updated to {new_status}",
+        details=details_str,
         prev_hash=prev_h,
         current_hash=curr_h,
     ))
@@ -287,13 +289,14 @@ def release_lab_to_patient(order_id: str, reviewed_by: str = "Attending Physicia
 
     last = db.query(AuditLog).order_by(AuditLog.id.desc()).first()
     prev_h = last.current_hash if last else GENESIS_HASH
-    curr_h = compute_audit_hash(prev_h, iso_now, reviewed_by, "RELEASE_LAB_TO_PATIENT", order_id, f"Released by {reviewed_by}")
+    details_str = f"Results for order {order_id} ({order.test_name}) verified and released to patient by {reviewed_by}"
+    curr_h = compute_audit_hash(prev_h, iso_now, reviewed_by, "RELEASE_LAB_TO_PATIENT", order_id, details_str)
     db.add(AuditLog(
         timestamp=iso_now,
         actor=reviewed_by,
         action="RELEASE_LAB_TO_PATIENT",
         record_id=order_id,
-        details=f"Results for order {order_id} ({order.test_name}) verified and released to patient by {reviewed_by}",
+        details=details_str,
         prev_hash=prev_h,
         current_hash=curr_h,
     ))

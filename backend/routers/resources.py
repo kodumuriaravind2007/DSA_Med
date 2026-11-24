@@ -8,7 +8,7 @@ Features:
 - Live Hospital Resource Graph with BFS, DFS, and path matching
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List, Dict, Any, Optional
 from datetime import datetime
@@ -295,6 +295,15 @@ def update_doctor_duty(doctor_id: str, req: DoctorDutyUpdateRequest, db: Session
 
 # --- HOSPITAL RESOURCE GRAPH ---
 
+def get_or_create_dept_node(g: HospitalResourceGraph, dept_name: str) -> str:
+    if not dept_name:
+        dept_name = "General Medicine"
+    dept_code = f"DEPT-{dept_name.upper()[:4].strip()}"
+    if dept_code not in g.nodes:
+        g.add_node(dept_code, dept_name, "department", {"name": dept_name})
+    return dept_code
+
+
 def build_live_resource_graph(db: Session) -> HospitalResourceGraph:
     """Constructs real graph of live database entities and relations."""
     g = HospitalResourceGraph()
@@ -302,7 +311,7 @@ def build_live_resource_graph(db: Session) -> HospitalResourceGraph:
     # 1. Departments
     departments = ["Emergency", "Cardiology", "Orthopedics", "Pediatrics", "General Medicine", "ICU"]
     for dept in departments:
-        g.add_node(f"DEPT-{dept.upper()[:3]}", dept, "department", {"name": dept})
+        get_or_create_dept_node(g, dept)
 
     # 2. Diagnostic services
     diag_services = [
@@ -316,49 +325,49 @@ def build_live_resource_graph(db: Session) -> HospitalResourceGraph:
     # 3. Doctors
     doctors = db.query(Doctor).all()
     for d in doctors:
-        d_node_id = f"DOC-{d.doctor_id}"
+        d_node_id = d.doctor_id if d.doctor_id.startswith("DOC-") else f"DOC-{d.doctor_id}"
         g.add_node(d_node_id, d.name, "doctor", {
             "specialty": d.specialty,
             "department": d.department,
             "duty_status": d.duty_status,
             "is_available": d.is_available,
         })
-        # Doctor -> Department
-        dept_code = f"DEPT-{d.department.upper()[:3]}"
+        dept_code = get_or_create_dept_node(g, d.department)
         g.add_edge(d_node_id, dept_code, "belongs_to")
 
     # 4. Beds
     beds = db.query(Bed).all()
     for b in beds:
-        b_node_id = f"BED-{b.bed_id}"
+        b_node_id = b.bed_id if b.bed_id.startswith("BED-") else f"BED-{b.bed_id}"
         g.add_node(b_node_id, f"{b.ward} ({b.bed_id})", "bed", {
             "status": b.status,
             "ward": b.ward,
             "department": b.department,
         })
-        dept_code = f"DEPT-{b.department.upper()[:3]}"
+        dept_code = get_or_create_dept_node(g, b.department)
         g.add_edge(b_node_id, dept_code, "located_in")
 
-    # 5. Active Patients
-    active_patients = db.query(Patient).filter(Patient.status.in_(["Waiting", "In Treatment", "Lab Requested", "Observation"])).all()
-    for p in active_patients:
-        p_node_id = f"PT-{p.patient_id}"
+    # 5. Patients
+    patients = db.query(Patient).all()
+    for p in patients:
+        p_node_id = p.patient_id if p.patient_id.startswith("PT-") else f"PT-{p.patient_id}"
         g.add_node(p_node_id, p.full_name, "patient", {
             "priority": p.priority,
             "status": p.status,
             "concern": p.reported_concern,
         })
-        # Patient -> Department
-        dept_code = f"DEPT-{p.department.upper()[:3]}"
+        dept_code = get_or_create_dept_node(g, p.department)
         g.add_edge(p_node_id, dept_code, "registered_in")
 
         # Patient -> Doctor
         if p.assigned_doctor_id:
-            g.add_edge(p_node_id, f"DOC-{p.assigned_doctor_id}", "assigned_to")
+            assigned_doc = p.assigned_doctor_id if p.assigned_doctor_id.startswith("DOC-") else f"DOC-{p.assigned_doctor_id}"
+            g.add_edge(p_node_id, assigned_doc, "assigned_to")
 
         # Patient -> Bed
         if p.assigned_bed_id:
-            g.add_edge(p_node_id, f"BED-{p.assigned_bed_id}", "admitted_to")
+            assigned_bed = p.assigned_bed_id if p.assigned_bed_id.startswith("BED-") else f"BED-{p.assigned_bed_id}"
+            g.add_edge(p_node_id, assigned_bed, "admitted_to")
 
         # Patient -> Diagnostic services (if in Lab Requested or cardiac)
         if p.status == "Lab Requested":
@@ -377,26 +386,22 @@ def get_resource_graph(db: Session = Depends(get_db)):
 
 
 @router.get("/graph/bfs/{node_id}")
-@router.post("/graph/bfs")
-def run_bfs(node_id: Optional[str] = None, start_node_id: Optional[str] = Query(None), db: Session = Depends(get_db)):
+def run_bfs(node_id: str, db: Session = Depends(get_db)):
     """Executes live BFS traversal from start node."""
     g = build_live_resource_graph(db)
-    target = node_id or start_node_id or "DEPT-EME"
-    return g.bfs_traversal(target)
+    return g.bfs_traversal(node_id)
 
 
 @router.get("/graph/dfs/{node_id}")
-@router.post("/graph/dfs")
-def run_dfs(node_id: Optional[str] = None, start_node_id: Optional[str] = Query(None), db: Session = Depends(get_db)):
+def run_dfs(node_id: str, db: Session = Depends(get_db)):
     """Executes live DFS traversal from start node."""
     g = build_live_resource_graph(db)
-    target = node_id or start_node_id or "DEPT-EME"
-    return g.dfs_traversal(target)
+    return g.dfs_traversal(node_id)
 
 
 @router.get("/graph/match-resource")
 def match_patient_resource(patient_id: str, department: str = "Emergency", db: Session = Depends(get_db)):
     """Demonstrates graph pathfinding to match patient with available doctor and bed."""
     g = build_live_resource_graph(db)
-    target_node = f"PT-{patient_id}" if not patient_id.startswith("PT-") else patient_id
+    target_node = patient_id if patient_id.startswith("PT-") else f"PT-{patient_id}"
     return g.find_resource_path(target_node, department)

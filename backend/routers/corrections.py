@@ -6,7 +6,7 @@ and SHA-256 cryptographic hash chaining for all medical record modifications.
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from typing import List, Optional
+from typing import List, Optional, Any
 from datetime import datetime
 import uuid
 
@@ -48,6 +48,22 @@ def get_patient_corrections(
         .order_by(MedicalCorrectionRecord.timestamp.desc())
         .all()
     )
+
+
+DISALLOWED_PATIENT_FIELDS = {"id", "patient_id", "created_at", "metadata"}
+
+
+def apply_patient_field_update(patient: Patient, field_name: str, new_value: Any):
+    if not hasattr(patient, field_name) or field_name in DISALLOWED_PATIENT_FIELDS:
+        return
+    curr_val = getattr(patient, field_name)
+    if isinstance(curr_val, int):
+        try:
+            setattr(patient, field_name, int(new_value))
+            return
+        except (ValueError, TypeError):
+            pass
+    setattr(patient, field_name, new_value)
 
 
 @router.post("", response_model=MedicalCorrectionResponse)
@@ -161,9 +177,8 @@ async def submit_medical_correction(
 
     # If approved and applies to patient model directly, update it
     if approval_status == "Approved":
-        if hasattr(patient, payload.field_name):
-            setattr(patient, payload.field_name, payload.new_value)
-            patient.updated_at = now_iso
+        apply_patient_field_update(patient, payload.field_name, payload.new_value)
+        patient.updated_at = now_iso
 
     db.commit()
     db.refresh(correction)
@@ -207,8 +222,8 @@ async def approve_correction(
 
     if decision == "Approved":
         patient = db.query(Patient).filter(Patient.patient_id == correction.patient_id).first()
-        if patient and hasattr(patient, correction.field_name):
-            setattr(patient, correction.field_name, correction.new_value)
+        if patient:
+            apply_patient_field_update(patient, correction.field_name, correction.new_value)
             patient.updated_at = now_iso
 
     # Audit log

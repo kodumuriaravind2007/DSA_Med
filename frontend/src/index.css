@@ -4,8 +4,8 @@
 
 @layer base {
   body {
-    background-color: #FAF6EC;
-    color: #2A161B;
+    background-color: #FDFDF1;
+    color: #251E1A;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     margin: 0;
     padding: 0;
@@ -15,26 +15,26 @@
   }
 
   ::selection {
-    background-color: #7F011F;
-    color: #F5EBD0;
+    background-color: #EC5E27;
+    color: #FFFFFF;
   }
 }
 
-/* Custom subtle scrollbars */
+/* Custom minimal scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #FAF6EC;
+  background: #FDFDF1;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #E8DBC0;
+  background: #E8E4C9;
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #7F011F;
+  background: #EC5E27;
 }

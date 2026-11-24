@@ -35,6 +35,14 @@ def generate_next_plan_id(db: Session) -> str:
                     max_num = num
             except ValueError:
                 pass
+    for obj in db.new:
+        if isinstance(obj, PostOpCarePlan) and obj.id and obj.id.startswith("POP-"):
+            try:
+                num = int(obj.id.split("-")[1])
+                if num > max_num:
+                    max_num = num
+            except ValueError:
+                pass
     return f"POP-{max_num + 1}"
 
 
@@ -45,6 +53,14 @@ def generate_next_task_id(db: Session) -> str:
         if t_id and t_id.startswith("PTK-"):
             try:
                 num = int(t_id.split("-")[1])
+                if num > max_num:
+                    max_num = num
+            except ValueError:
+                pass
+    for obj in db.new:
+        if isinstance(obj, PostOpTask) and obj.id and obj.id.startswith("PTK-"):
+            try:
+                num = int(obj.id.split("-")[1])
                 if num > max_num:
                     max_num = num
             except ValueError:
@@ -110,6 +126,7 @@ def create_post_op_care_plan(req: PostOpCarePlanCreate, db: Session = Depends(ge
             nurse_name=""
         )
         db.add(t)
+        db.flush()
 
     db.add(TimelineEvent(
         patient_id=req.patient_id,

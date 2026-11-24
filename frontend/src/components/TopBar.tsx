@@ -46,19 +46,19 @@ export const TopBar: React.FC<TopBarProps> = ({
     : [];
 
   return (
-    <header className="h-16 bg-white border-b border-[#E8DBC0] px-6 flex items-center justify-between sticky top-0 z-20 shadow-xs">
+    <header className="h-16 bg-white border-b border-[#E8E4C9] px-6 flex items-center justify-between sticky top-0 z-20 shadow-xs">
       {/* Title & Subtitle */}
       <div>
-        <h2 className="text-base font-bold text-[#7F011F] flex items-center gap-2">
+        <h2 className="text-base font-bold text-[#EC5E27] flex items-center gap-2">
           <span>{title}</span>
         </h2>
-        <p className="text-xs text-[#6B5B5E]">{subtitle}</p>
+        <p className="text-xs text-[#736860]">{subtitle}</p>
       </div>
 
       {/* Center Search Bar */}
       <div className="relative w-80 hidden md:block">
         <div className="relative">
-          <Search className="w-4 h-4 text-[#8C7B7E] absolute left-3 top-2.5" />
+          <Search className="w-4 h-4 text-[#8E8278] absolute left-3 top-2.5" />
           <input
             type="text"
             placeholder="Search patient by ID, name, phone..."
@@ -68,16 +68,16 @@ export const TopBar: React.FC<TopBarProps> = ({
               setIsSearchOpen(true);
             }}
             onFocus={() => setIsSearchOpen(true)}
-            className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl border border-[#E8DBC0] bg-[#FAF6EC] text-[#2A161B] focus:bg-white focus:outline-none focus:border-[#7F011F] transition"
+            className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl border border-[#E8E4C9] bg-[#FDFDF1] text-[#251E1A] focus:bg-white focus:outline-none focus:border-[#EC5E27] transition"
           />
         </div>
 
         {/* Search Results Dropdown */}
         {isSearchOpen && searchTerm.trim() && (
-          <div className="absolute top-10 left-0 right-0 bg-white rounded-xl shadow-xl border border-[#E8DBC0] max-h-64 overflow-y-auto z-50">
+          <div className="absolute top-10 left-0 right-0 bg-white rounded-xl shadow-xl border border-[#E8E4C9] max-h-64 overflow-y-auto z-50">
             {filteredPatients.length > 0 ? (
               <div className="p-1.5">
-                <div className="text-[10px] font-semibold text-[#8C7B7E] px-2 py-1 uppercase">
+                <div className="text-[10px] font-semibold text-[#8E8278] px-2 py-1 uppercase">
                   Patient Records ({filteredPatients.length})
                 </div>
                 {filteredPatients.slice(0, 5).map((p) => (
@@ -88,23 +88,23 @@ export const TopBar: React.FC<TopBarProps> = ({
                       setIsSearchOpen(false);
                       setSearchTerm('');
                     }}
-                    className="w-full text-left px-2.5 py-2 rounded-lg hover:bg-[#FAF6EC] flex items-center justify-between text-xs transition"
+                    className="w-full text-left px-2.5 py-2 rounded-lg hover:bg-[#FDFDF1] flex items-center justify-between text-xs transition"
                   >
                     <div>
-                      <div className="font-semibold text-[#2A161B] flex items-center gap-1.5">
-                        <span className="font-mono text-[#7F011F]">{p.patient_id}</span>
+                      <div className="font-semibold text-[#251E1A] flex items-center gap-1.5">
+                        <span className="font-mono text-[#EC5E27]">{p.patient_id}</span>
                         <span>{p.full_name}</span>
                       </div>
-                      <div className="text-[11px] text-[#6B5B5E]">
+                      <div className="text-[11px] text-[#736860]">
                         {p.gender}, {p.age}y • {p.department} • Priority {p.priority}
                       </div>
                     </div>
-                    <ArrowRight className="w-3.5 h-3.5 text-[#8C7B7E]" />
+                    <ArrowRight className="w-3.5 h-3.5 text-[#8E8278]" />
                   </button>
                 ))}
               </div>
             ) : (
-              <div className="p-3 text-center text-xs text-[#8C7B7E]">
+              <div className="p-3 text-center text-xs text-[#8E8278]">
                 No matching patients found.
               </div>
             )}
@@ -131,7 +131,7 @@ export const TopBar: React.FC<TopBarProps> = ({
         {role !== 'patient' && (
           <button
             onClick={onOpenRegister}
-            className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#7F011F] hover:bg-[#680119] text-[#F5EBD0] shadow-sm transition flex items-center gap-1.5"
+            className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#EC5E27] hover:bg-[#D54813] text-[#FFF3EC] shadow-sm transition flex items-center gap-1.5"
           >
             <span>+ Register</span>
           </button>
@@ -141,19 +141,19 @@ export const TopBar: React.FC<TopBarProps> = ({
         <div className="relative">
           <button
             onClick={() => setShowAlerts(!showAlerts)}
-            className="p-2 rounded-xl hover:bg-[#FAF6EC] text-[#2A161B] relative transition border border-transparent hover:border-[#E8DBC0]"
+            className="p-2 rounded-xl hover:bg-[#FDFDF1] text-[#251E1A] relative transition border border-transparent hover:border-[#E8E4C9]"
           >
-            <Bell className="w-4 h-4 text-[#7F011F]" />
+            <Bell className="w-4 h-4 text-[#EC5E27]" />
             {alerts.length > 0 && (
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#7F011F] ring-2 ring-white"></span>
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#EC5E27] ring-2 ring-white"></span>
             )}
           </button>
 
           {showAlerts && (
-            <div className="absolute right-0 top-10 w-80 bg-white rounded-2xl shadow-xl border border-[#E8DBC0] p-3 z-50">
-              <div className="flex items-center justify-between pb-2 mb-2 border-b border-[#E8DBC0]">
-                <span className="text-xs font-bold text-[#7F011F]">Live Hospital Alerts</span>
-                <span className="text-[10px] font-semibold bg-[#FAF0F2] text-[#7F011F] px-1.5 py-0.5 rounded border border-[#7F011F]/20">
+            <div className="absolute right-0 top-10 w-80 bg-white rounded-2xl shadow-xl border border-[#E8E4C9] p-3 z-50">
+              <div className="flex items-center justify-between pb-2 mb-2 border-b border-[#E8E4C9]">
+                <span className="text-xs font-bold text-[#EC5E27]">Live Hospital Alerts</span>
+                <span className="text-[10px] font-semibold bg-[#FFF7F2] text-[#EC5E27] px-1.5 py-0.5 rounded border border-[#EC5E27]/20">
                   {alerts.length} Active
                 </span>
               </div>
@@ -163,13 +163,13 @@ export const TopBar: React.FC<TopBarProps> = ({
                     key={alt.id}
                     className={`p-2 rounded-xl text-xs border ${
                       alt.type === 'critical'
-                        ? 'bg-[#FAF0F2] border-[#7F011F]/30 text-[#7F011F]'
+                        ? 'bg-[#FFF7F2] border-[#EC5E27]/30 text-[#EC5E27]'
                         : 'bg-amber-50/70 border-amber-200 text-amber-900'
                     }`}
                   >
                     <div className="font-semibold flex items-center justify-between">
                       <span>{alt.title}</span>
-                      <span className="text-[10px] text-[#8C7B7E] font-normal">{alt.time}</span>
+                      <span className="text-[10px] text-[#8E8278] font-normal">{alt.time}</span>
                     </div>
                     <p className="text-[11px] mt-0.5 opacity-90">{alt.message}</p>
                   </div>
@@ -180,20 +180,20 @@ export const TopBar: React.FC<TopBarProps> = ({
         </div>
 
         {/* User Session Pill with Portal Switcher */}
-        <div className="flex items-center gap-2 pl-3 border-l border-[#E8DBC0]">
+        <div className="flex items-center gap-2 pl-3 border-l border-[#E8E4C9]">
           <button
             onClick={onOpenAuthModal}
-            className="flex items-center gap-2 hover:bg-[#FAF6EC] p-1.5 rounded-xl transition text-left"
+            className="flex items-center gap-2 hover:bg-[#FDFDF1] p-1.5 rounded-xl transition text-left"
             title="Click to switch role or portal"
           >
-            <div className="w-8 h-8 rounded-xl bg-[#7F011F] text-[#F5EBD0] flex items-center justify-center font-bold text-xs shadow-sm">
+            <div className="w-8 h-8 rounded-xl bg-[#EC5E27] text-[#FFF3EC] flex items-center justify-center font-bold text-xs shadow-sm">
               {role === 'patient' ? 'PT' : role ? role.slice(0, 2).toUpperCase() : 'US'}
             </div>
             <div className="hidden sm:block">
-              <div className="text-xs font-bold text-[#2A161B] leading-none capitalize">
+              <div className="text-xs font-bold text-[#251E1A] leading-none capitalize">
                 {user ? user.full_name : `${role} User`}
               </div>
-              <div className="text-[10px] text-[#7F011F] font-semibold leading-tight flex items-center gap-1 mt-0.5">
+              <div className="text-[10px] text-[#EC5E27] font-semibold leading-tight flex items-center gap-1 mt-0.5">
                 <Key className="w-2.5 h-2.5" />
                 <span className="capitalize">{role} Workspace</span>
               </div>
@@ -203,7 +203,7 @@ export const TopBar: React.FC<TopBarProps> = ({
           {/* Quick Log Out Action */}
           <button
             onClick={logout}
-            className="p-2 rounded-xl hover:bg-[#FAF0F2] text-[#8C7B7E] hover:text-[#7F011F] transition-colors border border-transparent hover:border-[#7F011F]/20"
+            className="p-2 rounded-xl hover:bg-[#FFF7F2] text-[#8E8278] hover:text-[#EC5E27] transition-colors border border-transparent hover:border-[#EC5E27]/20"
             title="Sign Out"
           >
             <LogOut className="w-4 h-4" />

@@ -37,3 +37,9 @@ Thumbs.db
 .vscode/
 .idea/
 *.log
+
+# Scratch
+extracted_schemas.txt
+line_687.json
+line_689.json
+raw_schemas_block.txt

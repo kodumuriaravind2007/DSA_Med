@@ -16,7 +16,7 @@ from datetime import datetime
 from ..database import get_db
 from ..models import CDSRecord, Patient, TimelineEvent, AuditLog
 from ..schemas import CDSCheckRequest, CDSReviewRequest
-from ..dsa.audit_chain import compute_audit_hash
+from ..dsa.audit_chain import compute_audit_hash, GENESIS_HASH
 
 router = APIRouter(prefix="/api/cds", tags=["Clinical Decision Support"])
 
@@ -180,7 +180,7 @@ def evaluate_clinical_rules(
 @router.post("/evaluate")
 def evaluate_triage(req: CDSCheckRequest):
     """Evaluates rules for given concern and vitals without storing."""
-    vitals_dict = req.vitals.dict() if req.vitals else {}
+    vitals_dict = req.vitals.model_dump() if req.vitals and hasattr(req.vitals, "model_dump") else (req.vitals.dict() if req.vitals else {})
     return evaluate_clinical_rules(
         concern=req.reported_concern,
         age=req.age or 30,
@@ -231,7 +231,7 @@ def record_clinician_decision(req: CDSReviewRequest, db: Session = Depends(get_d
 
         # Audit event
         last_audit = db.query(AuditLog).order_by(AuditLog.id.desc()).first()
-        prev_h = last_audit.current_hash if last_audit else "0" * 64
+        prev_h = last_audit.current_hash if last_audit else GENESIS_HASH
         ts = datetime.utcnow().isoformat()
         act = "CLINICAL_DECISION_REVIEW"
         details = f"Decision={req.decision}, OldPriority={old_prio}, FinalPriority={req.final_priority}, Notes={req.clinician_notes}"

@@ -131,17 +131,22 @@ class DuplicateDetector:
             matching_reasons = []
             score_components = []
 
+            # Primary signals
+            has_primary_signal = False
+
             # Exact phone match (strong signal)
             p_phone = normalize_phone(p.get("phone", ""))
             if c_phone and p_phone and c_phone == p_phone:
                 matching_reasons.append("Exact Phone Match")
                 score_components.append(0.85)
+                has_primary_signal = True
 
             # Exact email match
             p_email = normalize_string(p.get("email", ""))
             if c_email and p_email and c_email == p_email:
                 matching_reasons.append("Exact Email Match")
                 score_components.append(0.85)
+                has_primary_signal = True
 
             # Name similarity
             p_name = p.get("full_name", "")
@@ -149,12 +154,23 @@ class DuplicateDetector:
             if name_score >= 0.70:
                 matching_reasons.append(f"High Name Similarity ({int(name_score * 100)}%)")
                 score_components.append(name_score)
+                has_primary_signal = True
 
-            # DOB match
+            # If neither phone, email, nor high name similarity matched, records are not duplicates
+            if not has_primary_signal:
+                continue
+
+            # DOB match (only if non-empty on both)
             p_dob = p.get("date_of_birth", "")
             if c_dob and p_dob and c_dob == p_dob:
                 matching_reasons.append("Identical Date of Birth")
                 score_components.append(0.75)
+
+            # Age match (if DOB not present)
+            c_age = candidate_patient.get("age")
+            p_age = p.get("age")
+            if c_age is not None and p_age is not None and c_age == p_age:
+                score_components.append(0.60)
 
             # Gender match
             p_gender = p.get("gender", "")

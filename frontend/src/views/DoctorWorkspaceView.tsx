@@ -96,15 +96,12 @@ export const DoctorWorkspaceView: React.FC<DoctorWorkspaceViewProps> = ({
     setIsSubmittingMed(true);
     try {
       // 1. Add medication to patient
-      await fetch(`/api/patients/${selectedPatientId}/status`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          new_status: 'In Treatment',
-          actor: activeDoctor?.name || 'Attending Physician',
-          notes: `Prescribed ${newMedName} ${newMedDosage} (${newMedFreq})`,
-        }),
-      });
+      await api.updatePatientStatus(
+        selectedPatientId,
+        'In Treatment',
+        `Prescribed ${newMedName} ${newMedDosage} (${newMedFreq})`,
+        activeDoctor?.name || 'Attending Physician'
+      );
 
       // 2. Generate scheduled MAR administration tasks
       await api.generateMARSchedule(selectedPatientId);

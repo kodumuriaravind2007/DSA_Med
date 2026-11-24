@@ -424,7 +424,7 @@ export interface CriticalFollowUp {
   unit: string;
   reference_range: string;
   critical_rationale: string;
-  status: 'Awaiting Acknowledgement' | 'Acknowledged' | 'Follow-up In Progress' | 'Resolved' | 'Escalated';
+  status: 'Awaiting Acknowledgement' | 'Acknowledged' | 'Follow-up In Progress' | 'Resolved';
   deadline: string;
   acknowledged_by: string;
   acknowledged_at?: string | null;
@@ -544,3 +544,317 @@ export interface QRDoctorVerifyResult {
   } | null;
   patient: QRVerifiedPatient;
 }
+
+// ============================================================================
+// Clinical Intelligence & Differentiator Types
+// ============================================================================
+
+export interface NEWS2Score {
+  total_score: number;
+  risk_level: 'Normal' | 'Low' | 'Low-Medium' | 'Medium' | 'High';
+  urgency: 'STABLE' | 'ROUTINE_WARD_OBSERVATION' | 'URGENT_CLINICAL_REVIEW' | 'EMERGENCY_RAPID_RESPONSE';
+  color: string;
+  has_red_score: boolean;
+  suggested_heap_priority: number;
+  monitoring_frequency: string;
+  clinical_response: string;
+  parameters: {
+    respiration_rate: { value: number | null; score: number };
+    oxygen_saturation: { value: number | null; score: number; scale?: number };
+    supplemental_oxygen: { value: boolean; score: number };
+    systolic_bp: { value: number | null; score: number };
+    pulse_rate: { value: number | null; score: number };
+    consciousness: { value: string; score: number };
+    temperature_c: { value: number | null; score: number };
+  };
+  patient_id?: string;
+  patient_name?: string;
+}
+
+export interface DrugConflict {
+  type: 'drug-drug' | 'drug-condition' | 'drug-allergy';
+  source: string;
+  target: string;
+  severity: 'Severe Contraindication' | 'Major Warning' | 'Moderate Precaution' | 'Minor Caution';
+  mechanism: string;
+  clinical_recommendation: string;
+}
+
+export interface SuppressedConflict {
+  type: string;
+  source?: string;
+  target?: string;
+  severity?: string;
+  original_severity?: string;
+  mechanism?: string;
+  suppression_reason: string;
+  clinical_recommendation?: string;
+}
+
+export interface AlertFatigueStats {
+  raw_alerts_generated: number;
+  contextually_suppressed: number;
+  actionable_alerts_surfaced: number;
+  fatigue_reduction_pct: number;
+}
+
+export interface DrugInteractionResult {
+  candidate_drug: string;
+  safety_status: 'CRITICAL_BLOCKED' | 'WARNING_REQUIRES_OVERRIDE' | 'PRECAUTION_NOTED' | 'CLEARED';
+  safety_label: string;
+  color: string;
+  is_prescribing_safe: boolean;
+  conflict_count: number;
+  conflicts: DrugConflict[];
+  suppressed_conflicts?: SuppressedConflict[];
+  alert_fatigue_stats?: AlertFatigueStats;
+  graph_visualization: {
+    nodes: { id: string; name: string }[];
+    edges: { source: string; target: string; type: string; severity: string }[];
+  };
+  patient_id?: string;
+  patient_name?: string;
+}
+
+export interface MCIVictim {
+  victim_id: string;
+  name: string;
+  age: number;
+  category: 'Red' | 'Yellow' | 'Green' | 'Black';
+  label: string;
+  priority: number;
+  tag_color: string;
+  immediate_action: string;
+  decision_path: string[];
+  injuries: string;
+}
+
+export interface MCIScenario {
+  key: string;
+  title: string;
+  description: string;
+  casualty_count: number;
+}
+
+export interface MCISimulationResult {
+  scenario_key: string;
+  scenario_title: string;
+  scenario_description: string;
+  total_victims: number;
+  total_casualties: number;
+  category_counts: {
+    Red: number;
+    Yellow: number;
+    Green: number;
+    Black: number;
+  };
+  triage_summary: {
+    red_immediate: number;
+    yellow_delayed: number;
+    green_minor: number;
+    black_expectant: number;
+  };
+  surge_resource_demand: {
+    trauma_bays_required: number;
+    ventilators_required: number;
+    operating_rooms_required: number;
+    surge_code: string;
+  };
+  surge_analysis: {
+    available_red_beds: number;
+    available_yellow_beds: number;
+    available_ventilators: number;
+    available_trauma_surgeons: number;
+    red_bed_deficit: number;
+    ventilator_deficit: number;
+    is_capacity_exceeded: boolean;
+    surge_code: string;
+  };
+  victims: MCIVictim[];
+}
+
+export interface LevenshteinCell {
+  value: number;
+  operation: string;
+  is_optimal_path: boolean;
+}
+
+export interface LevenshteinRow {
+  row_header: string;
+  cells: LevenshteinCell[];
+}
+
+export interface LevenshteinVisualizerResult {
+  string_1: string;
+  string_2: string;
+  distance: number;
+  similarity_ratio: number;
+  columns: string[];
+  rows: LevenshteinRow[];
+  traceback_path: { row: number; col: number; op: string }[];
+  time_complexity: string;
+  space_complexity: string;
+}
+
+export interface HeapStep {
+  step: number;
+  action: 'APPEND' | 'COMPARE' | 'SWAP' | 'RESTORED';
+  array_state: number[];
+  active_index: number;
+  parent_index?: number | null;
+  swapped_with?: number;
+  explanation: string;
+}
+
+export interface HeapStepthroughResult {
+  initial_elements: number[];
+  inserted_element: number;
+  final_heap_array: number[];
+  total_swaps: number;
+  steps: HeapStep[];
+  complexity: string;
+}
+
+// ============================================================================
+// Advanced Research Engines Types (2024-2026 Operations Research)
+// ============================================================================
+
+export interface APQPatient {
+  patient_id: string;
+  name: string;
+  acuity_level: number;
+  acuity_label: string;
+  base_score: number;
+  dynamic_priority_score: number;
+  aging_rate_alpha: number;
+  elapsed_wait_minutes: number;
+  max_wait_target_mins: number;
+  is_sla_breached: boolean;
+  lwbs_risk_percentage: number;
+  lwbs_risk_tier: 'Low' | 'Elevated' | 'Critical';
+  starvation_promotion_levels: number;
+  queue_rank: number;
+  chief_concern: string;
+  color: string;
+}
+
+export interface APQSimulationResult {
+  simulation_parameters: {
+    elapsed_minutes: number;
+    evaluation_time: number;
+  };
+  current_ranking: {
+    evaluation_timestamp: number;
+    total_patients_queued: number;
+    sla_breach_count: number;
+    high_lwbs_risk_count: number;
+    queue: APQPatient[];
+    algorithmic_guarantee: string;
+  };
+  temporal_drift_projections: Array<{
+    time_offset_minutes: number;
+    summary: { total: number; sla_breaches: number; high_lwbs: number };
+    leaderboard: Array<{
+      rank: number;
+      patient_id: string;
+      name: string;
+      acuity: number;
+      score: number;
+      lwbs_pct: number;
+      promoted: boolean;
+    }>;
+  }>;
+}
+
+export interface BedAssignment {
+  patient_id: string;
+  patient_name: string;
+  patient_priority: number;
+  patient_condition: string;
+  bed_id: string;
+  bed_number: string;
+  ward: string;
+  matching_cost: number;
+  match_quality_percentage: number;
+  clinical_rationale: string[];
+}
+
+export interface HungarianBedMatchResult {
+  algorithm: string;
+  complexity: string;
+  total_patients_evaluated: number;
+  total_beds_evaluated: number;
+  matched_count: number;
+  unassigned_patient_count: number;
+  remaining_bed_count: number;
+  total_optimal_cost: number;
+  allocation_efficiency_pct: number;
+  assignments: BedAssignment[];
+  unassigned_patients: Array<{ patient_id: string; name: string; priority: number; reason: string }>;
+  unoccupied_beds: Array<{ bed_id: string; bed_number: string; ward: string }>;
+  bipartite_graph: {
+    patients: Array<{ id: string; name: string; priority: number; side: string }>;
+    beds: Array<{ id: string; name: string; ward: string; side: string }>;
+    matching_edges: Array<{ source: string; target: string; cost: number; quality: number }>;
+  };
+}
+
+export interface TrajectoryTimelinePoint {
+  recorded_at: string;
+  timestamp: number;
+  news2_score: number;
+  ewma_smoothed: number;
+  velocity_pts_per_hr: number;
+  respiratory_rate?: number;
+  spo2?: number;
+  heart_rate?: number;
+  systolic_bp?: number;
+}
+
+export interface TrajectoryAnalysisResult {
+  datapoints_analyzed: number;
+  current_news2: number;
+  ewma_smoothed_score: number;
+  score_velocity_per_hour: number;
+  trajectory_status: string;
+  trajectory_label: string;
+  color: string;
+  acceleration_alert: boolean;
+  clinical_recommendation: string;
+  timeline: TrajectoryTimelinePoint[];
+}
+
+export interface MerkleProofStep {
+  step: number;
+  action: string;
+  current_hash?: string;
+  sibling_hash?: string;
+  direction?: string;
+  resulting_hash?: string;
+  computed_root?: string;
+  expected_root?: string;
+  is_valid?: boolean;
+  explanation: string;
+}
+
+export interface MerkleProofResult {
+  merkle_root: string;
+  total_leaves: number;
+  target_record_index: number;
+  proof_of_inclusion: {
+    record_index: number;
+    record_data: any;
+    leaf_hash: string;
+    merkle_root: string;
+    proof_path: Array<{ sibling_hash: string; direction: string; layer: number }>;
+    proof_length: number;
+    theoretical_complexity: string;
+  };
+  verification_preview: {
+    is_valid: boolean;
+    step_count: number;
+    steps: MerkleProofStep[];
+  };
+}
+
+

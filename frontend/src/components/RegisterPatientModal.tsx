@@ -125,19 +125,19 @@ export const RegisterPatientModal: React.FC<RegisterPatientModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-2xl shadow-2xl border border-[#E8DBC0] w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-2xl border border-[#E8E4C9] w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
         {/* Modal Header */}
-        <div className="p-5 border-b border-[#E8DBC0] flex items-center justify-between bg-[#FAF6EC]">
+        <div className="p-5 border-b border-[#E8E4C9] flex items-center justify-between bg-[#FDFDF1]">
           <div>
-            <h3 className="text-base font-bold text-[#7F011F] flex items-center gap-2">
-              <Stethoscope className="w-5 h-5 text-[#7F011F]" />
+            <h3 className="text-base font-bold text-[#EC5E27] flex items-center gap-2">
+              <Stethoscope className="w-5 h-5 text-[#EC5E27]" />
               <span>Register Patient & Clinical Triage Intake</span>
             </h3>
-            <p className="text-xs text-[#6E5A5E]">
+            <p className="text-xs text-[#736860]">
               Unique ID generation, duplicate pre-check, and Min-Heap queue insertion
             </p>
           </div>
-          <button onClick={onClose} className="p-1 rounded-xl text-[#8C7B7E] hover:text-[#2A161B] hover:bg-[#F5EBD0] transition">
+          <button onClick={onClose} className="p-1 rounded-xl text-[#8E8278] hover:text-[#251E1A] hover:bg-[#FFF3EC] transition">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -146,24 +146,24 @@ export const RegisterPatientModal: React.FC<RegisterPatientModalProps> = ({
         <form onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-4 text-xs">
           {/* Section 1: Demographics */}
           <div>
-            <div className="text-[11px] font-bold text-[#7F011F] uppercase tracking-wider mb-2">
+            <div className="text-[11px] font-bold text-[#EC5E27] uppercase tracking-wider mb-2">
               1. Demographics & Identification
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="sm:col-span-2">
-                <label className="block text-[#6E5A5E] font-semibold mb-1">Full Name *</label>
+                <label className="block text-[#736860] font-semibold mb-1">Full Name *</label>
                 <input
                   type="text"
                   required
                   placeholder="e.g. Ramesh Chandra"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-[#E8DBC0] bg-[#FAF6EC] focus:bg-white focus:outline-none focus:border-[#7F011F] text-[#2A161B]"
+                  className="w-full p-2.5 rounded-xl border border-[#E8E4C9] bg-[#FDFDF1] focus:bg-white focus:outline-none focus:border-[#EC5E27] text-[#251E1A]"
                 />
               </div>
 
               <div>
-                <label className="block text-[#6E5A5E] font-semibold mb-1">Age *</label>
+                <label className="block text-[#736860] font-semibold mb-1">Age *</label>
                 <input
                   type="number"
                   required
@@ -171,18 +171,18 @@ export const RegisterPatientModal: React.FC<RegisterPatientModalProps> = ({
                   max={125}
                   value={age}
                   onChange={(e) => setAge(parseInt(e.target.value) || 0)}
-                  className="w-full p-2.5 rounded-xl border border-[#E8DBC0] bg-[#FAF6EC] focus:bg-white focus:outline-none focus:border-[#7F011F] text-[#2A161B]"
+                  className="w-full p-2.5 rounded-xl border border-[#E8E4C9] bg-[#FDFDF1] focus:bg-white focus:outline-none focus:border-[#EC5E27] text-[#251E1A]"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3">
               <div>
-                <label className="block text-[#6E5A5E] font-semibold mb-1">Gender *</label>
+                <label className="block text-[#736860] font-semibold mb-1">Gender *</label>
                 <select
                   value={gender}
                   onChange={(e) => setGender(e.target.value as any)}
-                  className="w-full p-2.5 rounded-xl border border-[#E8DBC0] bg-[#FAF6EC] focus:bg-white focus:outline-none focus:border-[#7F011F] text-[#2A161B]"
+                  className="w-full p-2.5 rounded-xl border border-[#E8E4C9] bg-[#FDFDF1] focus:bg-white focus:outline-none focus:border-[#EC5E27] text-[#251E1A]"
                 >
                   <option value="Male">Male</option>
                   <option value="Female">Female</option>
@@ -191,33 +191,33 @@ export const RegisterPatientModal: React.FC<RegisterPatientModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-[#6E5A5E] font-semibold mb-1">Phone Number</label>
+                <label className="block text-[#736860] font-semibold mb-1">Phone Number</label>
                 <input
                   type="text"
                   placeholder="+91 98765-43210"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-[#E8DBC0] bg-[#FAF6EC] focus:bg-white focus:outline-none focus:border-[#7F011F] text-[#2A161B]"
+                  className="w-full p-2.5 rounded-xl border border-[#E8E4C9] bg-[#FDFDF1] focus:bg-white focus:outline-none focus:border-[#EC5E27] text-[#251E1A]"
                 />
               </div>
 
               <div>
-                <label className="block text-[#6E5A5E] font-semibold mb-1">National ID / Aadhaar</label>
+                <label className="block text-[#736860] font-semibold mb-1">National ID / Aadhaar</label>
                 <input
                   type="text"
                   placeholder="AADHAAR-XXXX-XXXX"
                   value={govtId}
                   onChange={(e) => setGovtId(e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-[#E8DBC0] bg-[#FAF6EC] focus:bg-white focus:outline-none focus:border-[#7F011F] text-[#2A161B]"
+                  className="w-full p-2.5 rounded-xl border border-[#E8E4C9] bg-[#FDFDF1] focus:bg-white focus:outline-none focus:border-[#EC5E27] text-[#251E1A]"
                 />
               </div>
 
               <div>
-                <label className="block text-[#6E5A5E] font-semibold mb-1">Blood Group</label>
+                <label className="block text-[#736860] font-semibold mb-1">Blood Group</label>
                 <select
                   value={bloodGroup}
                   onChange={(e) => setBloodGroup(e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-[#E8DBC0] bg-[#FAF6EC] focus:bg-white focus:outline-none focus:border-[#7F011F] text-[#2A161B]"
+                  className="w-full p-2.5 rounded-xl border border-[#E8E4C9] bg-[#FDFDF1] focus:bg-white focus:outline-none focus:border-[#EC5E27] text-[#251E1A]"
                 >
                   {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map((bg) => (
                     <option key={bg} value={bg}>{bg}</option>
@@ -228,87 +228,87 @@ export const RegisterPatientModal: React.FC<RegisterPatientModalProps> = ({
           </div>
 
           {/* Section 2: Clinical Vitals */}
-          <div className="pt-2 border-t border-[#E8DBC0]">
-            <div className="text-[11px] font-bold text-[#7F011F] uppercase tracking-wider mb-2">
+          <div className="pt-2 border-t border-[#E8E4C9]">
+            <div className="text-[11px] font-bold text-[#EC5E27] uppercase tracking-wider mb-2">
               2. Initial Triage Vital Signs
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-6 gap-2">
               <div>
-                <label className="block text-[#6E5A5E] font-semibold mb-1">Systolic BP</label>
+                <label className="block text-[#736860] font-semibold mb-1">Systolic BP</label>
                 <input
                   type="number"
                   placeholder="120"
                   value={sbp}
                   onChange={(e) => setSbp(e.target.value === '' ? '' : parseInt(e.target.value))}
-                  className="w-full p-2 rounded-xl border border-[#E8DBC0] bg-[#FAF6EC] text-center focus:bg-white focus:outline-none focus:border-[#7F011F]"
+                  className="w-full p-2 rounded-xl border border-[#E8E4C9] bg-[#FDFDF1] text-center focus:bg-white focus:outline-none focus:border-[#EC5E27]"
                 />
               </div>
               <div>
-                <label className="block text-[#6E5A5E] font-semibold mb-1">Diastolic BP</label>
+                <label className="block text-[#736860] font-semibold mb-1">Diastolic BP</label>
                 <input
                   type="number"
                   placeholder="80"
                   value={dbp}
                   onChange={(e) => setDbp(e.target.value === '' ? '' : parseInt(e.target.value))}
-                  className="w-full p-2 rounded-xl border border-[#E8DBC0] bg-[#FAF6EC] text-center focus:bg-white focus:outline-none focus:border-[#7F011F]"
+                  className="w-full p-2 rounded-xl border border-[#E8E4C9] bg-[#FDFDF1] text-center focus:bg-white focus:outline-none focus:border-[#EC5E27]"
                 />
               </div>
               <div>
-                <label className="block text-[#6E5A5E] font-semibold mb-1">Heart Rate</label>
+                <label className="block text-[#736860] font-semibold mb-1">Heart Rate</label>
                 <input
                   type="number"
                   placeholder="78"
                   value={hr}
                   onChange={(e) => setHr(e.target.value === '' ? '' : parseInt(e.target.value))}
-                  className="w-full p-2 rounded-xl border border-[#E8DBC0] bg-[#FAF6EC] text-center focus:bg-white focus:outline-none focus:border-[#7F011F]"
+                  className="w-full p-2 rounded-xl border border-[#E8E4C9] bg-[#FDFDF1] text-center focus:bg-white focus:outline-none focus:border-[#EC5E27]"
                 />
               </div>
               <div>
-                <label className="block text-[#6E5A5E] font-semibold mb-1">SpO2 (%)</label>
+                <label className="block text-[#736860] font-semibold mb-1">SpO2 (%)</label>
                 <input
                   type="number"
                   placeholder="98"
                   value={spo2}
                   onChange={(e) => setSpo2(e.target.value === '' ? '' : parseInt(e.target.value))}
-                  className="w-full p-2 rounded-xl border border-[#E8DBC0] bg-[#FAF6EC] text-center focus:bg-white focus:outline-none focus:border-[#7F011F]"
+                  className="w-full p-2 rounded-xl border border-[#E8E4C9] bg-[#FDFDF1] text-center focus:bg-white focus:outline-none focus:border-[#EC5E27]"
                 />
               </div>
               <div>
-                <label className="block text-[#6E5A5E] font-semibold mb-1">Temp (°F)</label>
+                <label className="block text-[#736860] font-semibold mb-1">Temp (°F)</label>
                 <input
                   type="number"
                   step="0.1"
                   placeholder="98.6"
                   value={temp}
                   onChange={(e) => setTemp(e.target.value === '' ? '' : parseFloat(e.target.value))}
-                  className="w-full p-2 rounded-xl border border-[#E8DBC0] bg-[#FAF6EC] text-center focus:bg-white focus:outline-none focus:border-[#7F011F]"
+                  className="w-full p-2 rounded-xl border border-[#E8E4C9] bg-[#FDFDF1] text-center focus:bg-white focus:outline-none focus:border-[#EC5E27]"
                 />
               </div>
               <div>
-                <label className="block text-[#6E5A5E] font-semibold mb-1">Resp. Rate</label>
+                <label className="block text-[#736860] font-semibold mb-1">Resp. Rate</label>
                 <input
                   type="number"
                   placeholder="16"
                   value={rr}
                   onChange={(e) => setRr(e.target.value === '' ? '' : parseInt(e.target.value))}
-                  className="w-full p-2 rounded-xl border border-[#E8DBC0] bg-[#FAF6EC] text-center focus:bg-white focus:outline-none focus:border-[#7F011F]"
+                  className="w-full p-2 rounded-xl border border-[#E8E4C9] bg-[#FDFDF1] text-center focus:bg-white focus:outline-none focus:border-[#EC5E27]"
                 />
               </div>
             </div>
           </div>
 
           {/* Section 3: Reported Concern & CDS Suggestion */}
-          <div className="pt-2 border-t border-[#E8DBC0]">
-            <div className="text-[11px] font-bold text-[#7F011F] uppercase tracking-wider mb-2">
+          <div className="pt-2 border-t border-[#E8E4C9]">
+            <div className="text-[11px] font-bold text-[#EC5E27] uppercase tracking-wider mb-2">
               3. Chief Complaint & Triage Urgency
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-[#6E5A5E] font-semibold mb-1">Reported Concern / Symptom *</label>
+                <label className="block text-[#736860] font-semibold mb-1">Reported Concern / Symptom *</label>
                 <select
                   value={reportedConcern}
                   onChange={(e) => setReportedConcern(e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-[#E8DBC0] bg-[#FAF6EC] focus:bg-white focus:outline-none focus:border-[#7F011F] font-medium"
+                  className="w-full p-2.5 rounded-xl border border-[#E8E4C9] bg-[#FDFDF1] focus:bg-white focus:outline-none focus:border-[#EC5E27] font-medium"
                 >
                   {COMMON_CONCERNS.map((c) => (
                     <option key={c} value={c}>{c}</option>
@@ -317,11 +317,11 @@ export const RegisterPatientModal: React.FC<RegisterPatientModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-[#6E5A5E] font-semibold mb-1">Target Department *</label>
+                <label className="block text-[#736860] font-semibold mb-1">Target Department *</label>
                 <select
                   value={department}
                   onChange={(e) => setDepartment(e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-[#E8DBC0] bg-[#FAF6EC] focus:bg-white focus:outline-none focus:border-[#7F011F] font-medium"
+                  className="w-full p-2.5 rounded-xl border border-[#E8E4C9] bg-[#FDFDF1] focus:bg-white focus:outline-none focus:border-[#EC5E27] font-medium"
                 >
                   <option value="Emergency">Emergency</option>
                   <option value="Cardiology">Cardiology</option>
@@ -335,20 +335,20 @@ export const RegisterPatientModal: React.FC<RegisterPatientModalProps> = ({
 
             {/* CDS Explainable Suggestion Banner */}
             {cdsSuggestion && (
-              <div className="mt-3 p-3.5 bg-[#FAF6EC] border border-[#E8DBC0] rounded-2xl space-y-2">
+              <div className="mt-3 p-3.5 bg-[#FDFDF1] border border-[#E8E4C9] rounded-2xl space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-[#7F011F] flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-[#7F011F]" />
+                  <span className="font-bold text-[#EC5E27] flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-[#EC5E27]" />
                     CDS Rule Suggestion: {cdsSuggestion.suggested_priority_label}
                   </span>
-                  <span className="text-[10px] text-[#6E5A5E] font-bold">
+                  <span className="text-[10px] text-[#736860] font-bold">
                     Target Dept: {cdsSuggestion.suggested_department}
                   </span>
                 </div>
 
-                <div className="text-[11px] text-[#2A161B] space-y-0.5">
+                <div className="text-[11px] text-[#251E1A] space-y-0.5">
                   {cdsSuggestion.triggered_rules?.map((r: any, idx: number) => (
-                    <div key={idx} className="font-mono text-[10px] text-[#7F011F]">
+                    <div key={idx} className="font-mono text-[10px] text-[#EC5E27]">
                       • Rule [{r.rule_id}]: {r.name} ➔ {r.rationale}
                     </div>
                   ))}
@@ -360,7 +360,7 @@ export const RegisterPatientModal: React.FC<RegisterPatientModalProps> = ({
                   </div>
                 )}
 
-                <div className="text-[9px] text-[#8C7B7E] italic border-t border-[#E8DBC0] pt-1">
+                <div className="text-[9px] text-[#8E8278] italic border-t border-[#E8E4C9] pt-1">
                   {cdsSuggestion.disclaimer}
                 </div>
               </div>
@@ -369,11 +369,11 @@ export const RegisterPatientModal: React.FC<RegisterPatientModalProps> = ({
             {/* Final Confirmed Priority */}
             <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-[#6E5A5E] font-semibold mb-1">Confirmed Triage Priority *</label>
+                <label className="block text-[#736860] font-semibold mb-1">Confirmed Triage Priority *</label>
                 <select
                   value={priority}
                   onChange={(e) => setPriority(parseInt(e.target.value))}
-                  className="w-full p-2.5 rounded-xl border border-[#E8DBC0] bg-[#FAF6EC] focus:bg-white focus:outline-none focus:border-[#7F011F] font-bold"
+                  className="w-full p-2.5 rounded-xl border border-[#E8E4C9] bg-[#FDFDF1] focus:bg-white focus:outline-none focus:border-[#EC5E27] font-bold"
                 >
                   <option value={1}>Priority 1 — Critical (Red)</option>
                   <option value={2}>Priority 2 — Urgent (Amber)</option>
@@ -382,31 +382,31 @@ export const RegisterPatientModal: React.FC<RegisterPatientModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-[#6E5A5E] font-semibold mb-1">Clinician Triage Notes</label>
+                <label className="block text-[#736860] font-semibold mb-1">Clinician Triage Notes</label>
                 <input
                   type="text"
                   placeholder="e.g. Diaphoretic, pale, alert"
                   value={triageNotes}
                   onChange={(e) => setTriageNotes(e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-[#E8DBC0] bg-[#FAF6EC] focus:bg-white focus:outline-none focus:border-[#7F011F]"
+                  className="w-full p-2.5 rounded-xl border border-[#E8E4C9] bg-[#FDFDF1] focus:bg-white focus:outline-none focus:border-[#EC5E27]"
                 />
               </div>
             </div>
           </div>
 
           {/* Modal Footer */}
-          <div className="pt-4 border-t border-[#E8DBC0] flex items-center justify-end gap-3">
+          <div className="pt-4 border-t border-[#E8E4C9] flex items-center justify-end gap-3">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl border border-[#E8DBC0] text-[#6E5A5E] hover:bg-[#FAF6EC] font-bold"
+              className="px-4 py-2 rounded-xl border border-[#E8E4C9] text-[#736860] hover:bg-[#FDFDF1] font-bold"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting || !fullName.trim()}
-              className="px-5 py-2 rounded-xl bg-[#7F011F] hover:bg-[#660119] text-[#F5EBD0] font-bold shadow-xs transition disabled:opacity-50"
+              className="px-5 py-2 rounded-xl bg-[#EC5E27] hover:bg-[#D54813] text-[#FFF3EC] font-bold shadow-xs transition disabled:opacity-50"
             >
               {isSubmitting ? 'Registering & Enqueueing...' : 'Register Patient & Enqueue (Min-Heap)'}
             </button>

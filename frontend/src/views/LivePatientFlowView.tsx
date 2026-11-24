@@ -140,23 +140,23 @@ export const LivePatientFlowView: React.FC<LivePatientFlowViewProps> = ({
 
       {/* Top Section: Next Patient selected by Priority Min-Heap */}
       {queueData?.next_patient ? (
-        <div className="bg-white rounded-2xl border border-[#E8DBC0] p-6 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div className="bg-white rounded-2xl border border-[#E8E4C9] p-6 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="space-y-2 max-w-2xl">
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-[#FAF0F2] text-[#7F011F] border border-[#7F011F]/20">
+              <span className="text-[10px] font-bold tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-[#FFF7F2] text-[#EC5E27] border border-[#EC5E27]/20">
                 Min-Heap Queue Root • Next in Line
               </span>
               <PriorityBadge priority={queueData.next_patient.node.priority} />
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-xl font-bold font-mono text-[#7F011F]">{queueData.next_patient.node.patient_id}</span>
-              <span className="text-lg font-bold text-[#2A161B]">{queueData.next_patient.node.patient_name}</span>
-              <span className="text-xs text-[#6E5A5E] font-medium">• {queueData.next_patient.node.department}</span>
+              <span className="text-xl font-bold font-mono text-[#EC5E27]">{queueData.next_patient.node.patient_id}</span>
+              <span className="text-lg font-bold text-[#251E1A]">{queueData.next_patient.node.patient_name}</span>
+              <span className="text-xs text-[#736860] font-medium">• {queueData.next_patient.node.department}</span>
             </div>
-            <p className="text-xs text-[#6E5A5E]">
-              Complaint: <span className="text-[#2A161B] font-semibold">{queueData.next_patient.node.reported_concern || 'N/A'}</span>
+            <p className="text-xs text-[#736860]">
+              Complaint: <span className="text-[#251E1A] font-semibold">{queueData.next_patient.node.reported_concern || 'N/A'}</span>
             </p>
-            <p className="text-[11px] text-[#7F011F] bg-[#FAF6EC] p-3 rounded-xl border border-[#E8DBC0] mt-1">
+            <p className="text-[11px] text-[#EC5E27] bg-[#FDFDF1] p-3 rounded-xl border border-[#E8E4C9] mt-1">
               <strong>Triage Invariant Reason:</strong> {queueData.next_patient.explanation}
             </p>
           </div>
@@ -165,14 +165,14 @@ export const LivePatientFlowView: React.FC<LivePatientFlowViewProps> = ({
             <button
               onClick={handleCallNext}
               disabled={isCallingNext}
-              className="w-full sm:w-auto px-5 py-2.5 rounded-xl text-xs font-bold bg-[#7F011F] hover:bg-[#660119] text-[#F5EBD0] shadow-sm transition flex items-center justify-center gap-2 disabled:opacity-50"
+              className="w-full sm:w-auto px-5 py-2.5 rounded-xl text-xs font-bold bg-[#EC5E27] hover:bg-[#D54813] text-[#FFF3EC] shadow-sm transition flex items-center justify-center gap-2 disabled:opacity-50"
             >
-              <Activity className="w-4 h-4 text-[#F5EBD0]" />
+              <Activity className="w-4 h-4 text-[#FFF3EC]" />
               <span>{isCallingNext ? 'Extracting from Heap...' : 'Dispatch for Treatment'}</span>
             </button>
             <button
               onClick={() => onSelectPatient(queueData.next_patient.node.patient_id)}
-              className="w-full sm:w-auto px-5 py-2.5 rounded-full text-xs font-bold bg-[#FAF6EC] hover:bg-[#F5EBD0] text-[#7F011F] border border-[#E8DBC0] transition-all flex items-center justify-center gap-1.5 shadow-2xs"
+              className="w-full sm:w-auto px-5 py-2.5 rounded-full text-xs font-bold bg-[#FDFDF1] hover:bg-[#FFF3EC] text-[#EC5E27] border border-[#E8E4C9] transition-all flex items-center justify-center gap-1.5 shadow-2xs"
             >
               <span>View 360°</span>
               <ChevronRight className="w-3.5 h-3.5" />
@@ -180,38 +180,38 @@ export const LivePatientFlowView: React.FC<LivePatientFlowViewProps> = ({
           </div>
         </div>
       ) : (
-        <div className="bg-white p-6 rounded-3xl border border-[#E8DBC0] text-center text-sm font-semibold text-[#6E5A5E] shadow-sm">
+        <div className="bg-white p-6 rounded-3xl border border-[#E8E4C9] text-center text-sm font-semibold text-[#736860] shadow-sm">
           Waiting queue is currently empty. All patients have been dispatched or discharged.
         </div>
       )}
 
       {/* Filter and Search Bar */}
-      <div className="bg-white p-5 rounded-3xl border border-[#E8DBC0] shadow-sm space-y-3">
+      <div className="bg-white p-5 rounded-3xl border border-[#E8E4C9] shadow-sm space-y-3">
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
           {/* Search Input */}
           <div className="relative flex-1">
-            <Search className="w-4 h-4 text-[#8C7B7E] absolute left-3.5 top-3" />
+            <Search className="w-4 h-4 text-[#8E8278] absolute left-3.5 top-3" />
             <input
               type="text"
               placeholder="Search by ID, name, phone, or symptom..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 text-xs font-semibold rounded-full border border-[#E8DBC0] bg-[#FAF6EC] focus:bg-white focus:outline-none focus:border-[#7F011F] text-[#2A161B] shadow-2xs"
+              className="w-full pl-10 pr-4 py-2.5 text-xs font-semibold rounded-full border border-[#E8E4C9] bg-[#FDFDF1] focus:bg-white focus:outline-none focus:border-[#EC5E27] text-[#251E1A] shadow-2xs"
             />
           </div>
 
           {/* Quick Registration Button */}
           <button
             onClick={onOpenRegister}
-            className="px-5 py-2.5 rounded-full text-xs font-bold bg-[#7F011F] hover:bg-[#660119] text-[#F5EBD0] shadow-sm hover:shadow-md transition-all shrink-0"
+            className="px-5 py-2.5 rounded-full text-xs font-bold bg-[#EC5E27] hover:bg-[#D54813] text-[#FFF3EC] shadow-sm hover:shadow-md transition-all shrink-0"
           >
             + Register New Patient
           </button>
         </div>
 
         {/* Filter Pills (Oval Boxes) */}
-        <div className="flex flex-wrap items-center gap-2.5 pt-2 border-t border-[#E8DBC0]/60 text-xs text-[#6E5A5E]">
-          <span className="font-bold flex items-center gap-1.5 text-[#7F011F]">
+        <div className="flex flex-wrap items-center gap-2.5 pt-2 border-t border-[#E8E4C9]/60 text-xs text-[#736860]">
+          <span className="font-bold flex items-center gap-1.5 text-[#EC5E27]">
             <Filter className="w-3.5 h-3.5" />
             Filters:
           </span>
@@ -220,7 +220,7 @@ export const LivePatientFlowView: React.FC<LivePatientFlowViewProps> = ({
           <select
             value={priorityFilter}
             onChange={(e) => setPriorityFilter(e.target.value)}
-            className="px-4 py-2 rounded-full border border-[#E8DBC0] bg-[#FAF6EC] text-xs font-bold text-[#2A161B] focus:outline-none focus:border-[#7F011F] shadow-2xs"
+            className="px-4 py-2 rounded-full border border-[#E8E4C9] bg-[#FDFDF1] text-xs font-bold text-[#251E1A] focus:outline-none focus:border-[#EC5E27] shadow-2xs"
           >
             <option value="All">All Priorities</option>
             <option value="1">Priority 1 — Critical</option>
@@ -232,7 +232,7 @@ export const LivePatientFlowView: React.FC<LivePatientFlowViewProps> = ({
           <select
             value={departmentFilter}
             onChange={(e) => setDepartmentFilter(e.target.value)}
-            className="px-4 py-2 rounded-full border border-[#E8DBC0] bg-[#FAF6EC] text-xs font-bold text-[#2A161B] focus:outline-none focus:border-[#7F011F] shadow-2xs"
+            className="px-4 py-2 rounded-full border border-[#E8E4C9] bg-[#FDFDF1] text-xs font-bold text-[#251E1A] focus:outline-none focus:border-[#EC5E27] shadow-2xs"
           >
             <option value="All">All Departments</option>
             <option value="Emergency">Emergency</option>
@@ -247,7 +247,7 @@ export const LivePatientFlowView: React.FC<LivePatientFlowViewProps> = ({
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-2 rounded-full border border-[#E8DBC0] bg-[#FAF6EC] text-xs font-bold text-[#2A161B] focus:outline-none focus:border-[#7F011F] shadow-2xs"
+            className="px-4 py-2 rounded-full border border-[#E8E4C9] bg-[#FDFDF1] text-xs font-bold text-[#251E1A] focus:outline-none focus:border-[#EC5E27] shadow-2xs"
           >
             <option value="All">All Statuses</option>
             <option value="Waiting">Waiting</option>
@@ -258,17 +258,17 @@ export const LivePatientFlowView: React.FC<LivePatientFlowViewProps> = ({
             <option value="Referred">Referred</option>
           </select>
 
-          <span className="ml-auto text-xs font-semibold text-[#8C7B7E]">
+          <span className="ml-auto text-xs font-semibold text-[#8E8278]">
             Showing {filteredPatients.length} of {patients.length} records
           </span>
         </div>
       </div>
 
       {/* Patient Flow Data Table */}
-      <div className="bg-white rounded-2xl border border-[#E8DBC0] shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl border border-[#E8E4C9] shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-[#FAF6EC] text-[#6E5A5E] uppercase font-semibold text-[11px] border-b border-[#E8DBC0]">
+            <thead className="bg-[#FDFDF1] text-[#736860] uppercase font-semibold text-[11px] border-b border-[#E8E4C9]">
               <tr>
                 <th className="py-3.5 px-4">Patient ID</th>
                 <th className="py-3.5 px-4">Name & Demographics</th>
@@ -280,7 +280,7 @@ export const LivePatientFlowView: React.FC<LivePatientFlowViewProps> = ({
                 <th className="py-3.5 px-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#E8DBC0]/40 text-[#2A161B]">
+            <tbody className="divide-y divide-[#E8E4C9]/40 text-[#251E1A]">
               {filteredPatients.length > 0 ? (
                 filteredPatients.map((p) => {
                   const arrivalDate = new Date(p.arrival_time * 1000);
@@ -288,9 +288,9 @@ export const LivePatientFlowView: React.FC<LivePatientFlowViewProps> = ({
                   const waitDurationMins = Math.max(0, Math.floor((Date.now() / 1000 - p.arrival_time) / 60));
 
                   return (
-                    <tr key={p.patient_id} className="hover:bg-[#FAF6EC]/60 transition">
+                    <tr key={p.patient_id} className="hover:bg-[#FDFDF1]/60 transition">
                       {/* Patient ID */}
-                      <td className="py-3.5 px-4 font-mono font-bold text-[#7F011F]">
+                      <td className="py-3.5 px-4 font-mono font-bold text-[#EC5E27]">
                         {p.patient_id}
                         {p.is_duplicate_flag && (
                           <span className="ml-1.5 px-1.5 py-0.5 rounded text-[10px] bg-amber-100 text-amber-800 font-semibold" title="Duplicate Suspect">
@@ -301,14 +301,14 @@ export const LivePatientFlowView: React.FC<LivePatientFlowViewProps> = ({
 
                       {/* Name & Demographics */}
                       <td className="py-3.5 px-4">
-                        <div className="font-bold text-[#2A161B]">{p.full_name}</div>
-                        <div className="text-[11px] text-[#6E5A5E]">
+                        <div className="font-bold text-[#251E1A]">{p.full_name}</div>
+                        <div className="text-[11px] text-[#736860]">
                           {p.gender}, {p.age}y • Blood: {p.blood_group || 'N/A'}
                         </div>
                       </td>
 
                       {/* Reported Concern */}
-                      <td className="py-3.5 px-4 max-w-xs truncate text-[#2A161B]">
+                      <td className="py-3.5 px-4 max-w-xs truncate text-[#251E1A]">
                         {p.reported_concern || 'Routine Assessment'}
                       </td>
 
@@ -319,16 +319,29 @@ export const LivePatientFlowView: React.FC<LivePatientFlowViewProps> = ({
 
                       {/* Arrival & Wait */}
                       <td className="py-3.5 px-4">
-                        <div className="font-semibold text-[#2A161B]">{formattedTime}</div>
-                        <div className="text-[11px] text-[#6E5A5E]">
+                        <div className="font-semibold text-[#251E1A]">{formattedTime}</div>
+                        <div className="text-[11px] text-[#736860]">
                           Waited: <strong>{waitDurationMins} min</strong>
                         </div>
+                        {p.status === 'Waiting' && waitDurationMins > 30 && (
+                          <div className="mt-0.5">
+                            {waitDurationMins > 60 ? (
+                              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200">
+                                APQ Aged (+1 Tier)
+                              </span>
+                            ) : (
+                              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200">
+                                APQ Accumulating
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </td>
 
                       {/* Department & Doctor */}
                       <td className="py-3.5 px-4">
-                        <div className="font-medium text-[#2A161B]">{p.department}</div>
-                        <div className="text-[11px] text-[#6E5A5E]">
+                        <div className="font-medium text-[#251E1A]">{p.department}</div>
+                        <div className="text-[11px] text-[#736860]">
                           Doc: {p.assigned_doctor_id || 'Unassigned'}
                         </div>
                       </td>
@@ -343,7 +356,7 @@ export const LivePatientFlowView: React.FC<LivePatientFlowViewProps> = ({
                         <div className="flex items-center justify-end gap-1.5">
                           <button
                             onClick={() => onSelectPatient(p.patient_id)}
-                            className="px-2.5 py-1 rounded-lg bg-[#FAF6EC] hover:bg-[#F5EBD0] text-[#7F011F] font-semibold transition text-[11px] border border-[#E8DBC0]"
+                            className="px-2.5 py-1 rounded-lg bg-[#FDFDF1] hover:bg-[#FFF3EC] text-[#EC5E27] font-semibold transition text-[11px] border border-[#E8E4C9]"
                             title="Open Patient 360"
                           >
                             360°
@@ -353,7 +366,7 @@ export const LivePatientFlowView: React.FC<LivePatientFlowViewProps> = ({
                               setTransitionPatient(p);
                               setNewStatus(p.status);
                             }}
-                            className="px-2.5 py-1 rounded-lg bg-[#FAF0F2] hover:bg-[#F5EBD0] text-[#7F011F] font-semibold transition text-[11px] border border-[#7F011F]/20"
+                            className="px-2.5 py-1 rounded-lg bg-[#FFF7F2] hover:bg-[#FFF3EC] text-[#EC5E27] font-semibold transition text-[11px] border border-[#EC5E27]/20"
                             title="Update Status"
                           >
                             Status
@@ -375,7 +388,7 @@ export const LivePatientFlowView: React.FC<LivePatientFlowViewProps> = ({
                 })
               ) : (
                 <tr>
-                  <td colSpan={8} className="py-8 text-center text-[#8C7B7E]">
+                  <td colSpan={8} className="py-8 text-center text-[#8E8278]">
                     No patients matching the specified filters.
                   </td>
                 </tr>
@@ -388,21 +401,21 @@ export const LivePatientFlowView: React.FC<LivePatientFlowViewProps> = ({
       {/* Status Transition Modal */}
       {transitionPatient && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-2xl border border-[#E8DBC0] w-full max-w-md p-6 space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-[#E8DBC0]">
-              <h3 className="text-sm font-bold text-[#7F011F]">
+          <div className="bg-white rounded-2xl shadow-2xl border border-[#E8E4C9] w-full max-w-md p-6 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-[#E8E4C9]">
+              <h3 className="text-sm font-bold text-[#EC5E27]">
                 Update Workflow Status: {transitionPatient.patient_id}
               </h3>
-              <button onClick={() => setTransitionPatient(null)} className="text-[#8C7B7E] hover:text-[#2A161B]">✕</button>
+              <button onClick={() => setTransitionPatient(null)} className="text-[#8E8278] hover:text-[#251E1A]">✕</button>
             </div>
 
             <form onSubmit={handleStatusSubmit} className="space-y-3 text-xs">
               <div>
-                <label className="block text-[#6E5A5E] font-semibold mb-1">Target Status:</label>
+                <label className="block text-[#736860] font-semibold mb-1">Target Status:</label>
                 <select
                   value={newStatus}
                   onChange={(e) => setNewStatus(e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-[#E8DBC0] bg-[#FAF6EC] focus:bg-white focus:outline-none focus:border-[#7F011F] text-[#2A161B]"
+                  className="w-full p-2.5 rounded-xl border border-[#E8E4C9] bg-[#FDFDF1] focus:bg-white focus:outline-none focus:border-[#EC5E27] text-[#251E1A]"
                 >
                   <option value="Waiting">Waiting</option>
                   <option value="In Treatment">In Treatment</option>
@@ -415,13 +428,13 @@ export const LivePatientFlowView: React.FC<LivePatientFlowViewProps> = ({
               </div>
 
               <div>
-                <label className="block text-[#6E5A5E] font-semibold mb-1">Clinical Notes (Optional):</label>
+                <label className="block text-[#736860] font-semibold mb-1">Clinical Notes (Optional):</label>
                 <textarea
                   rows={2}
                   value={statusNotes}
                   onChange={(e) => setStatusNotes(e.target.value)}
                   placeholder="Reason for transition or clinical instructions..."
-                  className="w-full p-2.5 rounded-xl border border-[#E8DBC0] bg-[#FAF6EC] focus:bg-white focus:outline-none focus:border-[#7F011F] text-[#2A161B]"
+                  className="w-full p-2.5 rounded-xl border border-[#E8E4C9] bg-[#FDFDF1] focus:bg-white focus:outline-none focus:border-[#EC5E27] text-[#251E1A]"
                 />
               </div>
 
@@ -429,14 +442,14 @@ export const LivePatientFlowView: React.FC<LivePatientFlowViewProps> = ({
                 <button
                   type="button"
                   onClick={() => setTransitionPatient(null)}
-                  className="px-4 py-2 rounded-xl border border-[#E8DBC0] text-[#6E5A5E] hover:bg-[#FAF6EC]"
+                  className="px-4 py-2 rounded-xl border border-[#E8E4C9] text-[#736860] hover:bg-[#FDFDF1]"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isUpdatingStatus}
-                  className="px-5 py-2 rounded-xl bg-[#7F011F] hover:bg-[#660119] text-[#F5EBD0] font-semibold shadow-xs"
+                  className="px-5 py-2 rounded-xl bg-[#EC5E27] hover:bg-[#D54813] text-[#FFF3EC] font-semibold shadow-xs"
                 >
                   {isUpdatingStatus ? 'Saving...' : 'Save Status'}
                 </button>
@@ -449,21 +462,21 @@ export const LivePatientFlowView: React.FC<LivePatientFlowViewProps> = ({
       {/* Priority Escalation Modal */}
       {priorityPatient && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-2xl border border-[#E8DBC0] w-full max-w-md p-6 space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-[#E8DBC0]">
-              <h3 className="text-sm font-bold text-[#7F011F]">
+          <div className="bg-white rounded-2xl shadow-2xl border border-[#E8E4C9] w-full max-w-md p-6 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-[#E8E4C9]">
+              <h3 className="text-sm font-bold text-[#EC5E27]">
                 Triage Priority Escalation: {priorityPatient.patient_id}
               </h3>
-              <button onClick={() => setPriorityPatient(null)} className="text-[#8C7B7E] hover:text-[#2A161B]">✕</button>
+              <button onClick={() => setPriorityPatient(null)} className="text-[#8E8278] hover:text-[#251E1A]">✕</button>
             </div>
 
             <form onSubmit={handlePrioritySubmit} className="space-y-3 text-xs">
               <div>
-                <label className="block text-[#6E5A5E] font-semibold mb-1">New Urgency Level:</label>
+                <label className="block text-[#736860] font-semibold mb-1">New Urgency Level:</label>
                 <select
                   value={newPriority}
                   onChange={(e) => setNewPriority(parseInt(e.target.value))}
-                  className="w-full p-2.5 rounded-xl border border-[#E8DBC0] bg-[#FAF6EC] focus:bg-white focus:outline-none focus:border-[#7F011F] text-[#2A161B]"
+                  className="w-full p-2.5 rounded-xl border border-[#E8E4C9] bg-[#FDFDF1] focus:bg-white focus:outline-none focus:border-[#EC5E27] text-[#251E1A]"
                 >
                   <option value={1}>Priority 1 — Critical (Preempts queue root)</option>
                   <option value={2}>Priority 2 — Urgent</option>
@@ -472,18 +485,18 @@ export const LivePatientFlowView: React.FC<LivePatientFlowViewProps> = ({
               </div>
 
               <div>
-                <label className="block text-[#6E5A5E] font-semibold mb-1">Clinical Justification (Mandatory):</label>
+                <label className="block text-[#736860] font-semibold mb-1">Clinical Justification (Mandatory):</label>
                 <textarea
                   required
                   rows={2}
                   value={priorityReason}
                   onChange={(e) => setPriorityReason(e.target.value)}
                   placeholder="e.g., Acute vital deterioration, SpO2 drop, sudden chest pressure..."
-                  className="w-full p-2.5 rounded-xl border border-[#E8DBC0] bg-[#FAF6EC] focus:bg-white focus:outline-none focus:border-[#7F011F] text-[#2A161B]"
+                  className="w-full p-2.5 rounded-xl border border-[#E8E4C9] bg-[#FDFDF1] focus:bg-white focus:outline-none focus:border-[#EC5E27] text-[#251E1A]"
                 />
               </div>
 
-              <div className="text-[11px] text-[#7F011F] bg-[#FAF0F2] p-2.5 rounded-xl border border-[#7F011F]/20">
+              <div className="text-[11px] text-[#EC5E27] bg-[#FFF7F2] p-2.5 rounded-xl border border-[#EC5E27]/20">
                 Notice: Updating priority causes an O(log N) heap sift-up/down in the live Priority Queue and writes a cryptographically signed entry to the SHA-256 audit log.
               </div>
 
@@ -491,14 +504,14 @@ export const LivePatientFlowView: React.FC<LivePatientFlowViewProps> = ({
                 <button
                   type="button"
                   onClick={() => setPriorityPatient(null)}
-                  className="px-4 py-2 rounded-xl border border-[#E8DBC0] text-[#6E5A5E] hover:bg-[#FAF6EC]"
+                  className="px-4 py-2 rounded-xl border border-[#E8E4C9] text-[#736860] hover:bg-[#FDFDF1]"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isUpdatingPriority || !priorityReason.trim()}
-                  className="px-5 py-2 rounded-xl bg-[#7F011F] hover:bg-[#660119] text-[#F5EBD0] font-semibold shadow-xs disabled:opacity-50"
+                  className="px-5 py-2 rounded-xl bg-[#EC5E27] hover:bg-[#D54813] text-[#FFF3EC] font-semibold shadow-xs disabled:opacity-50"
                 >
                   {isUpdatingPriority ? 'Reheapifying...' : 'Reheapify Priority'}
                 </button>

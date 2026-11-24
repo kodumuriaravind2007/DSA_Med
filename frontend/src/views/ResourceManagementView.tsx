@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   Bed as BedIcon, Stethoscope, Users, CheckCircle2, AlertCircle,
-  Filter, ArrowRight, Activity, RefreshCw, X
+  Filter, GitBranch, ArrowRight, Activity, RefreshCw, X
 } from 'lucide-react';
 import { api } from '../services/api';
 import { Bed, Doctor, Patient } from '../types';
@@ -14,10 +14,11 @@ interface ResourceManagementViewProps {
 export const ResourceManagementView: React.FC<ResourceManagementViewProps> = ({
   onSelectPatient,
 }) => {
-  const [activeTab, setActiveTab] = useState<'beds' | 'doctors'>('beds');
+  const [activeTab, setActiveTab] = useState<'beds' | 'doctors' | 'graph'>('beds');
   const [beds, setBeds] = useState<Bed[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [patients, setPatients] = useState<Patient[]>([]);
+  const [graphData, setGraphData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   // Filters
@@ -35,17 +36,24 @@ export const ResourceManagementView: React.FC<ResourceManagementViewProps> = ({
   const [assigningPatientId, setAssigningPatientId] = useState('');
   const [isAssigningDoctor, setIsAssigningDoctor] = useState(false);
 
+  // Graph Traversal State
+  const [traversalResult, setTraversalResult] = useState<any>(null);
+  const [traversalNode, setTraversalNode] = useState('DEPT-EME');
+  const [isTraversing, setIsTraversing] = useState(false);
+
   const loadResources = async () => {
     try {
       setIsLoading(true);
-      const [bedsRes, docsRes, ptsRes] = await Promise.all([
+      const [bedsRes, docsRes, ptsRes, graphRes] = await Promise.all([
         api.getBeds(),
         api.getDoctors(),
         api.getPatients(),
+        api.getResourceGraph(),
       ]);
       setBeds(bedsRes);
       setDoctors(docsRes);
       setPatients(ptsRes);
+      setGraphData(graphRes);
     } catch (err: any) {
       console.error(err);
     } finally {
@@ -118,6 +126,30 @@ export const ResourceManagementView: React.FC<ResourceManagementViewProps> = ({
     }
   };
 
+  const handleRunBFS = async () => {
+    try {
+      setIsTraversing(true);
+      const res = await api.runGraphBFS(traversalNode);
+      setTraversalResult(res);
+    } catch (err: any) {
+      alert(err.message || 'BFS failed');
+    } finally {
+      setIsTraversing(false);
+    }
+  };
+
+  const handleRunDFS = async () => {
+    try {
+      setIsTraversing(true);
+      const res = await api.runGraphDFS(traversalNode);
+      setTraversalResult(res);
+    } catch (err: any) {
+      alert(err.message || 'DFS failed');
+    } finally {
+      setIsTraversing(false);
+    }
+  };
+
   // Group beds by ward
   const wards = Array.from(new Set(beds.map((b) => b.ward)));
   const filteredBeds = beds.filter((b) => {
@@ -134,14 +166,14 @@ export const ResourceManagementView: React.FC<ResourceManagementViewProps> = ({
   return (
     <div className="p-6 md:p-8 space-y-6 max-w-7xl mx-auto">
       {/* Top Segmented Control */}
-      <div className="bg-white p-3 rounded-2xl border border-[#E8DBC0] shadow-sm flex items-center justify-between">
+      <div className="bg-white p-3 rounded-2xl border border-[#E8E4C9] shadow-sm flex items-center justify-between">
         <div className="flex items-center gap-2">
           <button
             onClick={() => setActiveTab('beds')}
             className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
               activeTab === 'beds'
-                ? 'bg-[#7F011F] text-[#F5EBD0] shadow-xs'
-                : 'text-[#6E5A5E] hover:bg-[#FAF6EC] hover:text-[#2A161B]'
+                ? 'bg-[#EC5E27] text-[#FFF3EC] shadow-xs'
+                : 'text-[#736860] hover:bg-[#FDFDF1] hover:text-[#251E1A]'
             }`}
           >
             <BedIcon className="w-3.5 h-3.5" />
@@ -152,18 +184,30 @@ export const ResourceManagementView: React.FC<ResourceManagementViewProps> = ({
             onClick={() => setActiveTab('doctors')}
             className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
               activeTab === 'doctors'
-                ? 'bg-[#7F011F] text-[#F5EBD0] shadow-xs'
-                : 'text-[#6E5A5E] hover:bg-[#FAF6EC] hover:text-[#2A161B]'
+                ? 'bg-[#EC5E27] text-[#FFF3EC] shadow-xs'
+                : 'text-[#736860] hover:bg-[#FDFDF1] hover:text-[#251E1A]'
             }`}
           >
             <Stethoscope className="w-3.5 h-3.5" />
             <span>Physician Directory ({doctors.length})</span>
           </button>
+
+          <button
+            onClick={() => setActiveTab('graph')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+              activeTab === 'graph'
+                ? 'bg-[#EC5E27] text-[#FFF3EC] shadow-xs'
+                : 'text-[#736860] hover:bg-[#FDFDF1] hover:text-[#251E1A]'
+            }`}
+          >
+            <GitBranch className="w-3.5 h-3.5" />
+            <span>Hospital Resource Graph</span>
+          </button>
         </div>
 
         <button
           onClick={loadResources}
-          className="p-2 rounded-xl border border-[#E8DBC0] hover:bg-[#FAF6EC] text-[#7F011F] transition"
+          className="p-2 rounded-xl border border-[#E8E4C9] hover:bg-[#FDFDF1] text-[#EC5E27] transition"
           title="Refresh Data"
         >
           <RefreshCw className="w-4 h-4" />
@@ -174,15 +218,15 @@ export const ResourceManagementView: React.FC<ResourceManagementViewProps> = ({
       {activeTab === 'beds' && (
         <div className="space-y-6">
           {/* Bed Filters */}
-          <div className="bg-white p-5 rounded-2xl border border-[#E8DBC0] shadow-sm flex flex-wrap items-center justify-between gap-3 text-xs">
+          <div className="bg-white p-5 rounded-2xl border border-[#E8E4C9] shadow-sm flex flex-wrap items-center justify-between gap-3 text-xs">
             <div className="flex flex-wrap items-center gap-3">
-              <span className="font-bold text-[#7F011F] flex items-center gap-1.5">
+              <span className="font-bold text-[#EC5E27] flex items-center gap-1.5">
                 <Filter className="w-3.5 h-3.5" /> Filter Beds:
               </span>
               <select
                 value={wardFilter}
                 onChange={(e) => setWardFilter(e.target.value)}
-                className="px-3 py-1.5 rounded-xl border border-[#E8DBC0] bg-[#FAF6EC] text-[#2A161B] font-semibold focus:outline-none focus:border-[#7F011F]"
+                className="px-3 py-1.5 rounded-xl border border-[#E8E4C9] bg-[#FDFDF1] text-[#251E1A] font-semibold focus:outline-none focus:border-[#EC5E27]"
               >
                 <option value="All">All Wards</option>
                 {wards.map((w) => (
@@ -193,7 +237,7 @@ export const ResourceManagementView: React.FC<ResourceManagementViewProps> = ({
               <select
                 value={bedStatusFilter}
                 onChange={(e) => setBedStatusFilter(e.target.value)}
-                className="px-3 py-1.5 rounded-xl border border-[#E8DBC0] bg-[#FAF6EC] text-[#2A161B] font-semibold focus:outline-none focus:border-[#7F011F]"
+                className="px-3 py-1.5 rounded-xl border border-[#E8E4C9] bg-[#FDFDF1] text-[#251E1A] font-semibold focus:outline-none focus:border-[#EC5E27]"
               >
                 <option value="All">All Statuses</option>
                 <option value="Available">Available</option>
@@ -203,12 +247,12 @@ export const ResourceManagementView: React.FC<ResourceManagementViewProps> = ({
               </select>
             </div>
 
-            <div className="flex items-center gap-3 text-[11px] text-[#6E5A5E]">
+            <div className="flex items-center gap-3 text-[11px] text-[#736860]">
               <span className="flex items-center gap-1">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-600"></span> Available: <strong className="text-emerald-700">{beds.filter((b) => b.status === 'Available').length}</strong>
               </span>
               <span className="flex items-center gap-1">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#7F011F]"></span> Occupied: <strong className="text-[#7F011F]">{beds.filter((b) => b.status === 'Occupied').length}</strong>
+                <span className="w-2.5 h-2.5 rounded-full bg-[#EC5E27]"></span> Occupied: <strong className="text-[#EC5E27]">{beds.filter((b) => b.status === 'Occupied').length}</strong>
               </span>
               <span className="flex items-center gap-1">
                 <span className="w-2.5 h-2.5 rounded-full bg-amber-600"></span> Cleaning: <strong className="text-amber-700">{beds.filter((b) => b.status === 'Cleaning').length}</strong>
@@ -225,11 +269,11 @@ export const ResourceManagementView: React.FC<ResourceManagementViewProps> = ({
                 if (wardBeds.length === 0) return null;
 
                 return (
-                  <div key={wardName} className="bg-white p-6 rounded-2xl border border-[#E8DBC0] shadow-sm space-y-4">
-                    <div className="flex items-center justify-between pb-3 border-b border-[#E8DBC0]">
+                  <div key={wardName} className="bg-white p-6 rounded-2xl border border-[#E8E4C9] shadow-sm space-y-4">
+                    <div className="flex items-center justify-between pb-3 border-b border-[#E8E4C9]">
                       <div className="flex items-center gap-2">
-                        <h3 className="font-bold text-[#7F011F] text-sm">{wardName} Ward</h3>
-                        <span className="text-[11px] text-[#6E5A5E] font-medium">({wardBeds.length} Beds)</span>
+                        <h3 className="font-bold text-[#EC5E27] text-sm">{wardName} Ward</h3>
+                        <span className="text-[11px] text-[#736860] font-medium">({wardBeds.length} Beds)</span>
                       </div>
                     </div>
 
@@ -241,40 +285,40 @@ export const ResourceManagementView: React.FC<ResourceManagementViewProps> = ({
                             bed.status === 'Available'
                               ? 'bg-emerald-50/40 border-emerald-200 hover:border-emerald-300'
                               : bed.status === 'Occupied'
-                              ? 'bg-[#FAF0F2] border-[#7F011F]/20 hover:border-[#7F011F]/40'
+                              ? 'bg-[#FFF7F2] border-[#EC5E27]/20 hover:border-[#EC5E27]/40'
                               : bed.status === 'Cleaning'
                               ? 'bg-amber-50/40 border-amber-200'
-                              : 'bg-[#FAF6EC] border-[#E8DBC0]'
+                              : 'bg-[#FDFDF1] border-[#E8E4C9]'
                           }`}
                         >
                           <div className="flex items-center justify-between">
-                            <span className="font-mono font-bold text-xs text-[#2A161B]">{bed.bed_id}</span>
+                            <span className="font-mono font-bold text-xs text-[#251E1A]">{bed.bed_id}</span>
                             <BedBadge status={bed.status} />
                           </div>
 
                           <div className="text-xs">
                             {bed.current_patient_id ? (
                               <div className="space-y-0.5">
-                                <div className="text-[#6E5A5E] text-[10px] uppercase font-bold">Current Occupant:</div>
-                                <div className="font-bold text-[#2A161B] flex items-center justify-between">
+                                <div className="text-[#736860] text-[10px] uppercase font-bold">Current Occupant:</div>
+                                <div className="font-bold text-[#251E1A] flex items-center justify-between">
                                   <span className="truncate">{bed.current_patient_name || bed.current_patient_id}</span>
                                   <button
                                     onClick={() => onSelectPatient(bed.current_patient_id!)}
-                                    className="text-[10px] text-[#7F011F] font-bold hover:underline shrink-0 ml-1"
+                                    className="text-[10px] text-[#EC5E27] font-bold hover:underline shrink-0 ml-1"
                                   >
                                     View 360°
                                   </button>
                                 </div>
                               </div>
                             ) : (
-                              <div className="text-[#8C7B7E] text-[11px] italic py-1">
+                              <div className="text-[#8E8278] text-[11px] italic py-1">
                                 {bed.status === 'Cleaning' ? 'Sanitization in progress' : 'Ready for admission'}
                               </div>
                             )}
                           </div>
 
                           {/* Action Buttons */}
-                          <div className="pt-2 border-t border-[#E8DBC0]/60 flex items-center justify-between text-xs">
+                          <div className="pt-2 border-t border-[#E8E4C9]/60 flex items-center justify-between text-xs">
                             {bed.status === 'Available' && (
                               <button
                                 onClick={() => setSelectedBed(bed)}
@@ -287,7 +331,7 @@ export const ResourceManagementView: React.FC<ResourceManagementViewProps> = ({
                             {bed.status === 'Occupied' && (
                               <button
                                 onClick={() => handleReleaseBed(bed.bed_id)}
-                                className="w-full py-1.5 text-center font-bold text-[#7F011F] bg-[#FAF0F2] hover:bg-[#F5EBD0] rounded-lg transition border border-[#7F011F]/20"
+                                className="w-full py-1.5 text-center font-bold text-[#EC5E27] bg-[#FFF7F2] hover:bg-[#FFF3EC] rounded-lg transition border border-[#EC5E27]/20"
                               >
                                 Release / Discharge Bed
                               </button>
@@ -315,15 +359,15 @@ export const ResourceManagementView: React.FC<ResourceManagementViewProps> = ({
       {/* --- TAB 2: DOCTORS --- */}
       {activeTab === 'doctors' && (
         <div className="space-y-6">
-          <div className="bg-white p-5 rounded-2xl border border-[#E8DBC0] shadow-sm flex items-center justify-between text-xs">
+          <div className="bg-white p-5 rounded-2xl border border-[#E8E4C9] shadow-sm flex items-center justify-between text-xs">
             <div className="flex items-center gap-3">
-              <span className="font-bold text-[#7F011F] flex items-center gap-1.5">
+              <span className="font-bold text-[#EC5E27] flex items-center gap-1.5">
                 <Filter className="w-3.5 h-3.5" /> Department:
               </span>
               <select
                 value={doctorDeptFilter}
                 onChange={(e) => setDoctorDeptFilter(e.target.value)}
-                className="px-3 py-1.5 rounded-xl border border-[#E8DBC0] bg-[#FAF6EC] text-[#2A161B] font-semibold focus:outline-none focus:border-[#7F011F]"
+                className="px-3 py-1.5 rounded-xl border border-[#E8E4C9] bg-[#FDFDF1] text-[#251E1A] font-semibold focus:outline-none focus:border-[#EC5E27]"
               >
                 <option value="All">All Specialties</option>
                 <option value="Emergency">Emergency</option>
@@ -334,7 +378,7 @@ export const ResourceManagementView: React.FC<ResourceManagementViewProps> = ({
                 <option value="ICU">ICU</option>
               </select>
             </div>
-            <span className="text-[#8C7B7E] font-medium">
+            <span className="text-[#8E8278] font-medium">
               {filteredDoctors.length} Doctors Listed
             </span>
           </div>
@@ -343,32 +387,32 @@ export const ResourceManagementView: React.FC<ResourceManagementViewProps> = ({
             {filteredDoctors.map((doc) => {
               const isOnDuty = doc.duty_status === 'On Duty';
               return (
-                <div key={doc.doctor_id} className="bg-white p-6 rounded-2xl border border-[#E8DBC0] shadow-sm space-y-3.5">
+                <div key={doc.doctor_id} className="bg-white p-6 rounded-2xl border border-[#E8E4C9] shadow-sm space-y-3.5">
                   <div className="flex items-start justify-between">
                     <div>
-                      <span className="font-mono text-[10px] font-bold text-[#7F011F]">{doc.doctor_id}</span>
-                      <h4 className="font-bold text-[#2A161B] text-sm">{doc.name}</h4>
-                      <p className="text-xs text-[#6E5A5E]">{doc.specialty}</p>
+                      <span className="font-mono text-[10px] font-bold text-[#EC5E27]">{doc.doctor_id}</span>
+                      <h4 className="font-bold text-[#251E1A] text-sm">{doc.name}</h4>
+                      <p className="text-xs text-[#736860]">{doc.specialty}</p>
                     </div>
                     <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
                       isOnDuty ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' :
-                      doc.duty_status === 'In Consultation' ? 'bg-[#FAF0F2] text-[#7F011F] border border-[#7F011F]/20' :
-                      'bg-[#FAF6EC] text-[#6E5A5E] border border-[#E8DBC0]'
+                      doc.duty_status === 'In Consultation' ? 'bg-[#FFF7F2] text-[#EC5E27] border border-[#EC5E27]/20' :
+                      'bg-[#FDFDF1] text-[#736860] border border-[#E8E4C9]'
                     }`}>
                       {doc.duty_status}
                     </span>
                   </div>
 
-                  <div className="p-3.5 bg-[#FAF6EC]/60 rounded-xl border border-[#E8DBC0] text-xs space-y-1">
-                    <div className="flex justify-between text-[#6E5A5E]">
+                  <div className="p-3.5 bg-[#FDFDF1]/60 rounded-xl border border-[#E8E4C9] text-xs space-y-1">
+                    <div className="flex justify-between text-[#736860]">
                       <span>Department:</span>
-                      <strong className="text-[#2A161B]">{doc.department}</strong>
+                      <strong className="text-[#251E1A]">{doc.department}</strong>
                     </div>
-                    <div className="flex justify-between text-[#6E5A5E]">
+                    <div className="flex justify-between text-[#736860]">
                       <span>Current Patient Load:</span>
-                      <strong className="text-[#7F011F]">{doc.current_patient_count} / {doc.max_active_patients}</strong>
+                      <strong className="text-[#EC5E27]">{doc.current_patient_count} / {doc.max_active_patients}</strong>
                     </div>
-                    <div className="flex justify-between text-[#6E5A5E]">
+                    <div className="flex justify-between text-[#736860]">
                       <span>Phone:</span>
                       <span>{doc.phone}</span>
                     </div>
@@ -379,7 +423,7 @@ export const ResourceManagementView: React.FC<ResourceManagementViewProps> = ({
                       onClick={() => handleToggleDuty(doc)}
                       className={`flex-1 py-2 rounded-xl font-bold transition border ${
                         isOnDuty
-                          ? 'border-[#E8DBC0] text-[#6E5A5E] hover:bg-[#FAF6EC]'
+                          ? 'border-[#E8E4C9] text-[#736860] hover:bg-[#FDFDF1]'
                           : 'border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100'
                       }`}
                     >
@@ -389,7 +433,7 @@ export const ResourceManagementView: React.FC<ResourceManagementViewProps> = ({
                     <button
                       onClick={() => setSelectedDoctor(doc)}
                       disabled={!isOnDuty}
-                      className="flex-1 py-2 rounded-xl font-bold bg-[#7F011F] hover:bg-[#660119] text-[#F5EBD0] shadow-xs transition disabled:opacity-40"
+                      className="flex-1 py-2 rounded-xl font-bold bg-[#EC5E27] hover:bg-[#D54813] text-[#FFF3EC] shadow-xs transition disabled:opacity-40"
                     >
                       Assign Patient
                     </button>
@@ -401,25 +445,131 @@ export const ResourceManagementView: React.FC<ResourceManagementViewProps> = ({
         </div>
       )}
 
+      {/* --- TAB 3: HOSPITAL RESOURCE GRAPH --- */}
+      {activeTab === 'graph' && (
+        <div className="space-y-6">
+          <div className="bg-white p-6 rounded-2xl border border-[#E8E4C9] shadow-sm space-y-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-[#E8E4C9]">
+              <div>
+                <h3 className="text-sm font-bold text-[#EC5E27]">Live Hospital Resource Graph (Adjacency List)</h3>
+                <p className="text-xs text-[#736860]">
+                  Mathematical graph model representing patients, departments, physicians, beds, and diagnostic services as connected vertices.
+                </p>
+              </div>
+
+              {/* Traversal Controls */}
+              <div className="flex items-center gap-2">
+                <select
+                  value={traversalNode}
+                  onChange={(e) => setTraversalNode(e.target.value)}
+                  className="px-3 py-1.5 rounded-xl border border-[#E8E4C9] bg-[#FDFDF1] text-xs font-semibold text-[#251E1A] focus:outline-none focus:border-[#EC5E27]"
+                >
+                  <option value="DEPT-EME">Emergency Dept</option>
+                  <option value="DEPT-CAR">Cardiology Dept</option>
+                  <option value="DEPT-ORT">Orthopedics Dept</option>
+                  <option value="DEPT-ICU">ICU Dept</option>
+                  <option value="PT-101">Patient PT-101</option>
+                </select>
+
+                <button
+                  onClick={handleRunBFS}
+                  disabled={isTraversing}
+                  className="px-4 py-1.5 rounded-xl bg-[#EC5E27] hover:bg-[#D54813] text-[#FFF3EC] text-xs font-bold shadow-xs"
+                >
+                  Run BFS
+                </button>
+
+                <button
+                  onClick={handleRunDFS}
+                  disabled={isTraversing}
+                  className="px-4 py-1.5 rounded-xl bg-[#FDFDF1] hover:bg-[#FFF3EC] text-[#EC5E27] border border-[#E8E4C9] text-xs font-bold shadow-xs"
+                >
+                  Run DFS
+                </button>
+              </div>
+            </div>
+
+            {/* Traversal Output Console */}
+            {traversalResult && (
+              <div className="p-4 bg-[#251E1A] text-[#FFF3EC] rounded-2xl space-y-2 text-xs font-mono">
+                <div className="text-[#FFF3EC] font-bold flex items-center justify-between">
+                  <span>Traversal Algorithm: {traversalResult.algorithm}</span>
+                  <span className="text-white/60 font-normal">{traversalResult.complexity}</span>
+                </div>
+                <div className="text-white/80">
+                  Start Vertex: <strong className="text-white">{traversalResult.start_node}</strong> • Total Visited: {traversalResult.total_visited} vertices
+                </div>
+                <div className="p-2.5 bg-black/40 rounded-xl border border-white/10 break-words text-[11px] text-emerald-300">
+                  Visited Order: {traversalResult.visited_order.join('  ➜  ')}
+                </div>
+              </div>
+            )}
+
+            {/* Visual Node Cloud & Adjacency Breakdown */}
+            {graphData && (
+              <div className="space-y-4 pt-2">
+                <div className="flex items-center gap-4 text-xs font-medium text-[#736860]">
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-3 h-3 rounded-full bg-[#EC5E27]"></span> Departments
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-3 h-3 rounded-full bg-emerald-600"></span> Doctors
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-3 h-3 rounded-full bg-amber-600"></span> Beds
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-3 h-3 rounded-full bg-purple-600"></span> Patients
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-3 h-3 rounded-full bg-rose-600"></span> Diagnostic Labs
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
+                  {Object.entries(graphData.adjacency_list || {}).map(([nodeId, neighbors]: [string, any]) => (
+                    <div key={nodeId} className="p-3.5 bg-[#FDFDF1]/60 rounded-xl border border-[#E8E4C9] text-xs">
+                      <div className="font-mono font-bold text-[#251E1A] flex items-center justify-between">
+                        <span>Vertex: {nodeId}</span>
+                        <span className="text-[10px] text-[#736860] font-normal">{neighbors.length} Edges</span>
+                      </div>
+                      <div className="mt-1 space-y-0.5 text-[11px] text-[#736860] font-mono">
+                        {neighbors.length > 0 ? (
+                          neighbors.map((edgeStr: string, idx: number) => (
+                            <div key={idx} className="truncate">↳ {edgeStr}</div>
+                          ))
+                        ) : (
+                          <div className="text-[#8E8278] italic">No connected edges</div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Allocate Bed Modal */}
       {selectedBed && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-2xl border border-[#E8DBC0] w-full max-w-md p-6 space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-[#E8DBC0]">
-              <h3 className="text-sm font-bold text-[#7F011F]">
+          <div className="bg-white rounded-2xl shadow-2xl border border-[#E8E4C9] w-full max-w-md p-6 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-[#E8E4C9]">
+              <h3 className="text-sm font-bold text-[#EC5E27]">
                 Allocate Bed {selectedBed.bed_id} ({selectedBed.ward})
               </h3>
-              <button onClick={() => setSelectedBed(null)} className="text-[#8C7B7E] hover:text-[#2A161B]">✕</button>
+              <button onClick={() => setSelectedBed(null)} className="text-[#8E8278] hover:text-[#251E1A]">✕</button>
             </div>
 
             <form onSubmit={handleAllocateBed} className="space-y-3 text-xs">
               <div>
-                <label className="block text-[#6E5A5E] font-bold mb-1">Select Patient to Admit:</label>
+                <label className="block text-[#736860] font-bold mb-1">Select Patient to Admit:</label>
                 <select
                   required
                   value={allocatingPatientId}
                   onChange={(e) => setAllocatingPatientId(e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-[#E8DBC0] bg-[#FAF6EC] text-[#2A161B] focus:outline-none focus:border-[#7F011F]"
+                  className="w-full p-2.5 rounded-xl border border-[#E8E4C9] bg-[#FDFDF1] text-[#251E1A] focus:outline-none focus:border-[#EC5E27]"
                 >
                   <option value="">-- Choose Patient --</option>
                   {patients
@@ -432,7 +582,7 @@ export const ResourceManagementView: React.FC<ResourceManagementViewProps> = ({
                 </select>
               </div>
 
-              <div className="p-3 bg-[#FAF0F2] text-[#7F011F] rounded-xl text-[11px] space-y-1 border border-[#7F011F]/20">
+              <div className="p-3 bg-[#FFF7F2] text-[#EC5E27] rounded-xl text-[11px] space-y-1 border border-[#EC5E27]/20">
                 <strong>Conflict Prevention Notice:</strong> System verifies bed status is Available and updates both patient EHR and hospital graph structures simultaneously.
               </div>
 
@@ -440,14 +590,14 @@ export const ResourceManagementView: React.FC<ResourceManagementViewProps> = ({
                 <button
                   type="button"
                   onClick={() => setSelectedBed(null)}
-                  className="px-4 py-2 rounded-xl border border-[#E8DBC0] text-[#6E5A5E] hover:bg-[#FAF6EC]"
+                  className="px-4 py-2 rounded-xl border border-[#E8E4C9] text-[#736860] hover:bg-[#FDFDF1]"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isAllocatingBed || !allocatingPatientId}
-                  className="px-5 py-2 rounded-xl bg-[#7F011F] hover:bg-[#660119] text-[#F5EBD0] font-bold disabled:opacity-50 shadow-xs"
+                  className="px-5 py-2 rounded-xl bg-[#EC5E27] hover:bg-[#D54813] text-[#FFF3EC] font-bold disabled:opacity-50 shadow-xs"
                 >
                   {isAllocatingBed ? 'Allocating...' : 'Confirm Allocation'}
                 </button>
@@ -460,22 +610,22 @@ export const ResourceManagementView: React.FC<ResourceManagementViewProps> = ({
       {/* Assign Doctor Modal */}
       {selectedDoctor && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-2xl border border-[#E8DBC0] w-full max-w-md p-6 space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-[#E8DBC0]">
-              <h3 className="text-sm font-bold text-[#7F011F]">
+          <div className="bg-white rounded-2xl shadow-2xl border border-[#E8E4C9] w-full max-w-md p-6 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-[#E8E4C9]">
+              <h3 className="text-sm font-bold text-[#EC5E27]">
                 Assign Patient to {selectedDoctor.name}
               </h3>
-              <button onClick={() => setSelectedDoctor(null)} className="text-[#8C7B7E] hover:text-[#2A161B]">✕</button>
+              <button onClick={() => setSelectedDoctor(null)} className="text-[#8E8278] hover:text-[#251E1A]">✕</button>
             </div>
 
             <form onSubmit={handleAssignDoctor} className="space-y-3 text-xs">
               <div>
-                <label className="block text-[#6E5A5E] font-bold mb-1">Select Patient:</label>
+                <label className="block text-[#736860] font-bold mb-1">Select Patient:</label>
                 <select
                   required
                   value={assigningPatientId}
                   onChange={(e) => setAssigningPatientId(e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-[#E8DBC0] bg-[#FAF6EC] text-[#2A161B] focus:outline-none focus:border-[#7F011F]"
+                  className="w-full p-2.5 rounded-xl border border-[#E8E4C9] bg-[#FDFDF1] text-[#251E1A] focus:outline-none focus:border-[#EC5E27]"
                 >
                   <option value="">-- Choose Patient --</option>
                   {patients.map((p) => (
@@ -486,22 +636,22 @@ export const ResourceManagementView: React.FC<ResourceManagementViewProps> = ({
                 </select>
               </div>
 
-              <div className="p-3 bg-[#FAF6EC] text-[#6E5A5E] rounded-xl text-[11px] border border-[#E8DBC0]">
-                Doctor current load: <strong className="text-[#7F011F]">{selectedDoctor.current_patient_count} / {selectedDoctor.max_active_patients}</strong> patients.
+              <div className="p-3 bg-[#FDFDF1] text-[#736860] rounded-xl text-[11px] border border-[#E8E4C9]">
+                Doctor current load: <strong className="text-[#EC5E27]">{selectedDoctor.current_patient_count} / {selectedDoctor.max_active_patients}</strong> patients.
               </div>
 
               <div className="flex items-center justify-end gap-2 pt-2">
                 <button
                   type="button"
                   onClick={() => setSelectedDoctor(null)}
-                  className="px-4 py-2 rounded-xl border border-[#E8DBC0] text-[#6E5A5E] hover:bg-[#FAF6EC]"
+                  className="px-4 py-2 rounded-xl border border-[#E8E4C9] text-[#736860] hover:bg-[#FDFDF1]"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isAssigningDoctor || !assigningPatientId}
-                  className="px-5 py-2 rounded-xl bg-[#7F011F] hover:bg-[#660119] text-[#F5EBD0] font-bold disabled:opacity-50 shadow-xs"
+                  className="px-5 py-2 rounded-xl bg-[#EC5E27] hover:bg-[#D54813] text-[#FFF3EC] font-bold disabled:opacity-50 shadow-xs"
                 >
                   {isAssigningDoctor ? 'Assigning...' : 'Confirm Assignment'}
                 </button>

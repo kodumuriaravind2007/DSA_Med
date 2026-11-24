@@ -19,6 +19,8 @@ import { LivePatientFlowView } from './views/LivePatientFlowView';
 import { Patient360View } from './views/Patient360View';
 import { ResourceManagementView } from './views/ResourceManagementView';
 import { SecurityAnalyticsView } from './views/SecurityAnalyticsView';
+import { DsaBoardView } from './views/DsaBoardView';
+import { ClinicalIntelligenceView } from './views/ClinicalIntelligenceView';
 
 import { api } from './services/api';
 import { wsClient } from './services/websocket';
@@ -97,22 +99,15 @@ function MainApp() {
     }
   }, [role]);
 
-  // Guard: Restrict patient role strictly to patient portal
-  useEffect(() => {
-    if (role === 'patient' && activeScreen !== 'patient-dashboard') {
-      setActiveScreen('patient-dashboard');
-    }
-  }, [role, activeScreen]);
-
   // If auth is still resolving from localStorage
   if (isAuthLoading) {
     return (
-      <div className="min-h-screen bg-[#FAF6EC] flex items-center justify-center">
+      <div className="min-h-screen bg-[#FDFDF1] flex items-center justify-center">
         <div className="text-center space-y-3">
-          <div className="w-12 h-12 rounded-2xl bg-[#7F011F] text-[#F5EBD0] flex items-center justify-center mx-auto shadow-md animate-pulse">
+          <div className="w-12 h-12 rounded-2xl bg-[#EC5E27] text-[#FFF3EC] flex items-center justify-center mx-auto shadow-md animate-pulse">
             <Activity className="w-6 h-6" />
           </div>
-          <p className="text-xs font-semibold text-[#7F011F] tracking-wide">
+          <p className="text-xs font-semibold text-[#EC5E27] tracking-wide">
             Initializing MedTree X Clinical Engine...
           </p>
         </div>
@@ -127,9 +122,7 @@ function MainApp() {
 
   const handleSelectPatient = (patientId: string) => {
     setSelectedPatientId(patientId);
-    if (role !== 'patient') {
-      setActiveScreen('patient-360');
-    }
+    setActiveScreen('patient-360');
   };
 
   const handlePatientRegistered = async (newPatient: any) => {
@@ -157,7 +150,7 @@ function MainApp() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF6EC] text-[#2A161B] font-sans selection:bg-[#7F011F] selection:text-[#F5EBD0] flex flex-col">
+    <div className="min-h-screen bg-[#FDFDF1] text-[#251E1A] font-sans selection:bg-[#EC5E27] selection:text-[#FFF3EC] flex flex-col">
       {/* Centered Top Navbar with Exactly 4 Options and Sub-parts */}
       <TopNavbar
         activeScreen={activeScreen}
@@ -232,6 +225,14 @@ function MainApp() {
 
         {activeScreen === 'security-analytics' && (
           <SecurityAnalyticsView />
+        )}
+
+        {activeScreen === 'dsa-board' && (
+          <DsaBoardView />
+        )}
+
+        {activeScreen === 'clinical-intelligence' && (
+          <ClinicalIntelligenceView />
         )}
       </main>
 
